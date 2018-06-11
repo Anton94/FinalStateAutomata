@@ -103,6 +103,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalOptions>/DCOMPLEX_VALIDATION_CHECK /DINFO %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,7 +147,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AssertLog.cpp" />
+    <ClCompile Include="FinalStateTransducer.cpp" />
+    <ClCompile Include="InputTests.cpp" />
+    <ClCompile Include="InputValidator.cpp" />
+    <ClCompile Include="RegularFinalStateTransducerBuilder.cpp" />
     <ClCompile Include="Source.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AssertLog.h" />
+    <ClInclude Include="FinalStateTransducer.h" />
+    <ClInclude Include="InputValidator.h" />
+    <ClInclude Include="RegularFinalStateTransducerBuilder.h" />
+    <ClInclude Include="Tests.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
