@@ -3,14 +3,26 @@
 #include "RegularFinalStateTransducerBuilder.h"
 #include "AssertLog.h"
 
-void RegularFinalStateTransducerBuilder::build(const char* regularExpression)
+RegularFinalStateTransducerBuilder::RegularFinalStateTransducerBuilder(const char* regExpr)
+	: transducer(nullptr)
 {
-	std::string regExpr(regularExpression);
+	auto regExprLen = std::strlen(regExpr);
+	regExprHolder = new (std::nothrow) char[regExprLen + 1];
+	if (!regExprHolder)
+	{
+		std::cout << "not enough memory...";
+	}
 
-	stack.reserve(regExpr.length() / 4); // Some 'random' optimization...
+	std::memcpy(regExprHolder, regExpr, regExprLen + 1);
+	build();
+}
 
+void RegularFinalStateTransducerBuilder::build()
+{
+	//stack.reserve(regExpr.length() / 4); // Some 'random' optimization...
+	std::cout << "Buidling a final state transudcer with regular expression \"" << regExprHolder << "\".\n";
 	int currLength, separatorAt;
-	char* pRegExpr = const_cast<char*>(regExpr.c_str()),
+	char* pRegExpr = regExprHolder,
 		*pCurrStart;
 	const char* const pRexExprStart = pRegExpr;
 	while (*pRegExpr)
@@ -38,7 +50,7 @@ void RegularFinalStateTransducerBuilder::build(const char* regularExpression)
 		}
 		if (currLength == 1)
 		{
-			switch (*pRegExpr)
+			switch (*pCurrStart)
 			{
 			case '*':
 				std::cout << "Star operation\n";
@@ -61,13 +73,16 @@ void RegularFinalStateTransducerBuilder::build(const char* regularExpression)
 		}
 		else
 		{
+			++pRegExpr;
 			stack.push_back(FinalStateTransducer(pCurrStart, separatorAt, currLength));
 		}
 	}
 
-	LogAndAssert(stack.size() > 1, "There are more than one objects left to apply operations to.");
-	LogAndAssert(stack.size() < 1, "There are no constructed objects.");
-	//transducer = stack[0]; // TODO move asigment operator
+	LogAndAssert(stack.size() == 1,
+		(stack.size() > 1 ? "There are more than one objects left to apply operations to."
+			: "There are no constructed objects."))	;
+	transducer = &stack[0];
+	std::cout << "Done buidling it.\n";
 }
 
 void RegularFinalStateTransducerBuilder::executeStarOperation()

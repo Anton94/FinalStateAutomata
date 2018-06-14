@@ -1,9 +1,10 @@
 #include <iostream>
 #include "FinalStateTransducer.h"
+#include "RegularFinalStateTransducerBuilder.h"
 #include "InputValidator.h"
 #include "Tests.h"
 
-const char * regExpr = "abc:5 * cdf:4 | ";
+const char * regExpr = "a:5 +";
 
 void ProcessCommandLineArguments(int argc, char *argv[])
 {
@@ -22,7 +23,16 @@ void ProcessCommandLineArguments(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 	ProcessCommandLineArguments(argc, argv);
-	RunInputValidationTests();
+	//RunInputValidationTests();
+
+	RegularFinalStateTransducerBuilder builder(regExpr);
+	FinalStateTransducer* tr = builder.GetBuildedTransducer();
+
+	tr->TraverseWithWord("");
+	tr->TraverseWithWord("a");
+	tr->TraverseWithWord("aa");
+	tr->TraverseWithWord("aaa");
+	tr->TraverseWithWord("aaaa");
 
 	return 0;
 }

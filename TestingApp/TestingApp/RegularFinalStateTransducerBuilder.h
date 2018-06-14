@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "FinalStateTransducer.h"
 
 /*
@@ -17,13 +18,21 @@ class RegularFinalStateTransducerBuilder
 {
 public:
 	// The string should be correct, here doesn't make almost no checks for correctness.
-	void build(const char* regularExpression);
+	RegularFinalStateTransducerBuilder(const char* regExpr);
+	~RegularFinalStateTransducerBuilder() { delete regExprHolder; }
+
+	FinalStateTransducer* GetBuildedTransducer() { return transducer; }
 private:
+	void build();
 	void executeStarOperation();
 	void executePlusOperation();
 	void executeConcatOperation();
 	void executeUnionOperation();
 
-	FinalStateTransducer transducer;
+	FinalStateTransducer* transducer; // TODO move it here!!!! (in a variable)
 	std::vector<FinalStateTransducer> stack;
+	char* regExprHolder;
+private:
+	RegularFinalStateTransducerBuilder(const RegularFinalStateTransducerBuilder& other) = delete;
+	RegularFinalStateTransducerBuilder& operator=(const RegularFinalStateTransducerBuilder& other) = delete;
 };
