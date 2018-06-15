@@ -53,7 +53,6 @@ void RegularFinalStateTransducerBuilder::build()
 			switch (*pCurrStart)
 			{
 			case '*':
-				std::cout << "Star operation\n";
 				executeStarOperation();
 				break;
 			case '+':

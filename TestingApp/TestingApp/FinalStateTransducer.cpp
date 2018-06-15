@@ -19,7 +19,7 @@ FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int len
 
 	Delta[0][word].push_back(Transition{ 1, outputNumber }); // One transition: 0 -> 1 via word @word and output @outputNumber.
 	FinalStates.insert(1); // 1 is a final state.
-	initialStateIndex = 0; // q0 which is 0 is the initial state
+	InitialStates.insert(0); // q0 which is 0 is the initial state
 }
 
 void FinalStateTransducer::CloseStar()
@@ -40,24 +40,108 @@ void FinalStateTransducer::ClosePlus()
 	Delta.push_back(StateTransitions());
 	size_t newStateIndex = Delta.size() - 1;
 
-	Delta[newStateIndex][""].push_back(Transition{ 0, 0 }); // Add "newState --e:0--> intialState" transition
 	for (const auto& finalStateIndex : FinalStates)
 	{
 		Delta[finalStateIndex][""].push_back(Transition{ newStateIndex, 0 }); // Add "finalState --e:0--> newState" transition
 	}
 
+	MakeSingleInitialState(newStateIndex);
+}
+
+void FinalStateTransducer::Concat(FinalStateTransducer& right)
+{
+	right.RemapDelta(Delta.size());
+
+	Delta.insert(Delta.end(),
+		std::make_move_iterator(right.Delta.begin()),
+		std::make_move_iterator(right.Delta.end()));
+
+	FinalStates.clear();
+	FinalStates.swap(right.FinalStates);
+}
+
+void FinalStateTransducer::Union(FinalStateTransducer& right)
+{
+	auto offset = Delta.size();
+	right.RemapDelta(Delta.size());
+
+	Delta.insert(Delta.end(),
+		std::make_move_iterator(right.Delta.begin()),
+		std::make_move_iterator(right.Delta.end()));
+
+	MoveRightInitialStatesIntoLeft(right, offset);
+	MoveRightFinalStatesIntoLeft(right, offset);
+}
+
+
+void FinalStateTransducer::Remap(int offset)
+{
+	RemapDelta(offset);
+	RemapInitialStates(offset);
+	RemapFinalStates(offset);
+}
+
+void FinalStateTransducer::RemapDelta(int offset)
+{
+	// I do not need this explicit remaping. TODO keep the offset 'per state' and recalculate "on the fly"?
+	for (auto& state : Delta)
+	{
+		for (auto& transitions : state)
+		{
+			for (auto& transition : transitions.second)
+			{
+				transition.state += offset;
+			}
+		}
+	}
+}
+
+void FinalStateTransducer::RemapInitialStates(int offset)
+{
+	std::unordered_set<size_t> newInitialStates;
+	for (auto& stateIndex : InitialStates)
+	{
+		newInitialStates.insert(stateIndex + offset);
+	}
+	InitialStates.swap(newInitialStates);
+}
+
+void FinalStateTransducer::RemapFinalStates(int offset)
+{
+	std::unordered_set<size_t> newFinalStates;
+	for (auto& stateIndex : FinalStates)
+	{
+		newFinalStates.insert(stateIndex + offset);
+	}
+	FinalStates.swap(newFinalStates);
+}
+
+void FinalStateTransducer::MoveRightInitialStatesIntoLeft(FinalStateTransducer& right, int offset)
+{
+	for (auto& intialStateIndex : right.InitialStates)
+	{
+		InitialStates.insert(intialStateIndex + offset);
+	}
+}
+
+void FinalStateTransducer::MoveRightFinalStatesIntoLeft(FinalStateTransducer& right, int offset)
+{
+	for (auto& finalStateIndex : right.FinalStates)
+	{
+		FinalStates.insert(finalStateIndex + offset);
+	}
+}
+
+void FinalStateTransducer::MakeSingleInitialState(int newInitialStateIndex)
+{
+	for (const auto& initialStateIndex : InitialStates)
+	{
+		Delta[newInitialStateIndex][""].push_back(Transition{ initialStateIndex, 0 }); // Add "newState --e:0--> initialState" transition
+	}
+
 	// Make the new state to be the initial one.
-	initialStateIndex = newStateIndex;
-}
-
-void FinalStateTransducer::Concat(const FinalStateTransducer& right)
-{
-
-}
-
-void FinalStateTransducer::Union(const FinalStateTransducer& right)
-{
-
+	InitialStates.clear();
+	InitialStates.insert(newInitialStateIndex);
 }
 
 bool FinalStateTransducer::TraverseWithWord(const char* word) const
@@ -77,7 +161,10 @@ bool FinalStateTransducer::TraverseWithWord(const char* word) const
 	std::deque<TraverseTransition> q;
 
 	q.push_back(BFSLevelSeparator);
-	q.push_back(TraverseTransition{ initialStateIndex, 0 }); // Fictial initial transition with the empty word and no output
+	for (const auto& initialStateIndex : InitialStates)
+	{
+		q.push_back(TraverseTransition{ static_cast<int>(initialStateIndex), 0 }); // Fictial initial transition with the empty word and no output to each initial state.
+	}
 
 	while (*pWord)
 	{

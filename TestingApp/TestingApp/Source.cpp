@@ -33,6 +33,8 @@ int main(int argc, char *argv[])
 	tr->TraverseWithWord("aa");
 	tr->TraverseWithWord("aaa");
 	tr->TraverseWithWord("aaaa");
+	tr->TraverseWithWord("aaaaa");
+	tr->TraverseWithWord("aaaaaa");
 
 	return 0;
 }

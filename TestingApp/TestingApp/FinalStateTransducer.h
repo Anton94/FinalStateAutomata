@@ -29,8 +29,18 @@ public:
 
 	void CloseStar();
 	void ClosePlus();
-	void Concat(const FinalStateTransducer& right);
-	void Union(const FinalStateTransducer& right);
+	void Concat(FinalStateTransducer& right);
+	void Union(FinalStateTransducer& right);
+
+	void Remap(int offset);
+	void RemapDelta(int offset);
+	void RemapInitialStates(int offset);
+	void RemapFinalStates(int offset);
+
+	void MoveRightInitialStatesIntoLeft(FinalStateTransducer& right, int offset);
+	void MoveRightFinalStatesIntoLeft(FinalStateTransducer& right, int offset);
+
+	void MakeSingleInitialState(int newInitialStateIndex);
 
 	// Only on a real-time transducer.
 	bool FinalStateTransducer::TraverseWithWord(const char* word) const;
@@ -38,8 +48,8 @@ private: // TODO: the key has to be something else, not a whole string!
 	typedef std::unordered_map<std::string, std::vector<Transition>>
 		StateTransitions;
 	std::vector<StateTransitions> Delta; // State at position 'i' with word 'w' will lead to state(s) ('state') (which are indexes in the Delta vector) with output ('output') some number.
-	std::unordered_set<int> FinalStates;
-	int initialStateIndex;
+	std::unordered_set<size_t> FinalStates;
+	std::unordered_set<size_t> InitialStates;
 
 private: // I do not want to copy this big structures, just to move them arround...
 	//FinalStateTransducer(const FinalStateTransducer& other) = delete; // TODO Whyyyy not able....
