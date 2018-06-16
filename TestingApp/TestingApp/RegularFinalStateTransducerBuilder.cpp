@@ -86,16 +86,25 @@ void RegularFinalStateTransducerBuilder::build()
 
 void RegularFinalStateTransducerBuilder::executeStarOperation()
 {
+#if defined(INFO)
+	std::cout << "Maikng a Kleene star." << std::endl;
+#endif
 	assert(stack.size() >= 1);
 	stack.back().CloseStar();
 }
 void RegularFinalStateTransducerBuilder::executePlusOperation()
 {
+#if defined(INFO)
+	std::cout << "Maikng a plus close." << std::endl;
+#endif
 	assert(stack.size() >= 1);
 	stack.back().ClosePlus();
 }
 void RegularFinalStateTransducerBuilder::executeConcatOperation()
 {
+#if defined(INFO)
+	std::cout << "Maikng a concatenation." << std::endl;
+#endif
 	assert(stack.size() >= 2);
 	auto last = stack.size() - 1;
 	stack[last - 1].Concat(stack[last]);
@@ -103,6 +112,9 @@ void RegularFinalStateTransducerBuilder::executeConcatOperation()
 }
 void RegularFinalStateTransducerBuilder::executeUnionOperation()
 {
+#if defined(INFO)
+	std::cout << "Maikng a union." << std::endl;
+#endif
 	assert(stack.size() >= 2);
 	auto last = stack.size() - 1;
 	stack[last - 1].Union(stack[last]);

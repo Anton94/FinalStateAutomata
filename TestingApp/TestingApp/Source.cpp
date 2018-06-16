@@ -4,7 +4,8 @@
 #include "InputValidator.h"
 #include "Tests.h"
 
-const char * regExpr = "a:5 +";
+//const char * regExpr = "a:5 * a:100 * | *"; // inf loop
+const char * regExpr = "a:5 a:100 | *";
 
 void ProcessCommandLineArguments(int argc, char *argv[])
 {
@@ -35,6 +36,8 @@ int main(int argc, char *argv[])
 	tr->TraverseWithWord("aaaa");
 	tr->TraverseWithWord("aaaaa");
 	tr->TraverseWithWord("aaaaaa");
+	tr->TraverseWithWord("a");
+	tr->TraverseWithWord("b");
 
 	return 0;
 }

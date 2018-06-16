@@ -24,18 +24,12 @@ FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int len
 
 void FinalStateTransducer::CloseStar()
 {
-#if defined(INFO)
-	std::cout << "Maikng a Kleene star." << std::endl;
-#endif
 	ClosePlus();
 	FinalStates.insert(Delta.size() - 1); // Add the new state as a final,
 }
 
 void FinalStateTransducer::ClosePlus()
 {
-#if defined(INFO)
-	std::cout << "Maikng a plus close." << std::endl;
-#endif
 	// Make a new state with no transitions.
 	Delta.push_back(StateTransitions());
 	size_t newStateIndex = Delta.size() - 1;
@@ -168,7 +162,7 @@ bool FinalStateTransducer::TraverseWithWord(const char* word) const
 
 	while (*pWord)
 	{
-		TraverseTransition& currTransition = q.front();
+		TraverseTransition currTransition = q.front();
 		q.pop_front();
 
 		if (q.empty())
