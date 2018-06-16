@@ -85,7 +85,7 @@ void RegularFinalStateTransducerBuilder::build()
 	LogAndAssert(stack.size() == 1,
 		(stack.size() > 1 ? "There are more than one objects left to apply operations to."
 			: "There are no constructed objects."))	;
-	transducer = &stack[0];
+	transducer = &stack[0];  // TODO move it here!!!!
 #if defined(INFO)
 	std::cout << "Done buidling it.\n";
 #endif

@@ -29,7 +29,7 @@ private:
 	void executeConcatOperation();
 	void executeUnionOperation();
 
-	FinalStateTransducer* transducer; // TODO move it here!!!! (in a variable)
+	FinalStateTransducer* transducer;
 	std::vector<FinalStateTransducer> stack;
 	char* regExprHolder;
 private:

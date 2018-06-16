@@ -97,13 +97,13 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalOptions>/DCOMPLEX_VALIDATION_CHECK /DINFO %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/DCOMPLEX_VALIDATION_CHECK /DINFO1 /DGUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>D:\repos\FinalStateAutomata\boost_1_67_0</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

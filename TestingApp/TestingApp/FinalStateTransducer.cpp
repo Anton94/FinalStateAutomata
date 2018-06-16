@@ -1,6 +1,8 @@
 #include <stdlib.h> // atoi
 #include <iostream>
 #include <deque>
+#include <unordered_set>
+#include <boost/functional/hash.hpp>
 #include "FinalStateTransducer.h"
 #include "AssertLog.h"
 
@@ -44,11 +46,19 @@ void FinalStateTransducer::ClosePlus()
 
 void FinalStateTransducer::Concat(FinalStateTransducer& right)
 {
-	right.RemapDelta(Delta.size());
+	right.Remap(Delta.size());
 
 	Delta.insert(Delta.end(),
 		std::make_move_iterator(right.Delta.begin()),
 		std::make_move_iterator(right.Delta.end()));
+
+	for (auto& leftFinalStateIndex : FinalStates)
+	{
+		for (auto& rightInitialStateIndex : right.InitialStates)
+		{
+			Delta[leftFinalStateIndex][""].push_back(Transition{ rightInitialStateIndex, 0 });
+		}
+	}
 
 	FinalStates.clear();
 	FinalStates.swap(right.FinalStates);
@@ -145,7 +155,7 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 #if defined(INFO)
 	std::cout << "Traversing with \"" << pWord << "\" word...\n";
 #endif
-	// TODO: check for epsilon cycles.. (inf outputs then for the word...)
+
 	char strTmp[] = "x";
 
 	struct TraverseTransition
@@ -162,6 +172,12 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 		q.push_back(TraverseTransition{ static_cast<int>(initialStateIndex), 0 }); // Fictial initial transition with the empty word and no output to each initial state.
 	}
 
+#if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
+	typedef std::pair<size_t, size_t> VisitedPair; // .first is the source, .second is the destination state
+	std::unordered_set<VisitedPair,
+						boost::hash<VisitedPair>
+						> visitedStateToStateWithEpsilon;
+#endif
 	while (*pWord)
 	{
 		TraverseTransition currTransition = q.front();
@@ -178,6 +194,9 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 
 		q.push_back(currTransition); // Move the separator to the "end".
 
+#if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
+		visitedStateToStateWithEpsilon.clear();
+#endif
 		// Read all states at the 'next' level and add the posibile transitions.
 		while (q.front().state != -1) // Untill the level separator.
 		{
@@ -202,6 +221,14 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 				// TODO: check for epsilon cycle...
 				for (const auto& transition : it->second) // Add them to the current level, because we have reached them withoud reading a symbol.
 				{
+#if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
+					const std::pair<size_t, size_t> visitedPairWithEpsilon { currTransition.state, transition.state };
+					if (visitedStateToStateWithEpsilon.find(visitedPairWithEpsilon) != visitedStateToStateWithEpsilon.end())
+					{
+						continue;
+					}
+					visitedStateToStateWithEpsilon.insert(visitedPairWithEpsilon);
+#endif
 					q.push_front(TraverseTransition{ (int)transition.state, currTransition.accumulatedOutput + transition.output });
 				}
 			}
@@ -221,6 +248,9 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 	// TODO the first one is the level separator...
 	// Try to find an final state on the last reached
 	std::unordered_set<size_t> accumulatedOutputs;
+#if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
+	visitedStateToStateWithEpsilon.clear();
+#endif
 	while (!q.empty())
 	{
 		const auto& currTransition = q.front();
@@ -232,9 +262,16 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 		const auto it = Delta[currTransition.state].find("");
 		if (it != Delta[currTransition.state].end()) // There are epsilon transitions from this state to others which might be finils.
 		{
-			// TODO: check for epsilon cycle...
 			for (const auto& transition : it->second) // Add them to the current level, because we have reached them withoud reading a symbol.
 			{
+#if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
+				const std::pair<size_t, size_t> visitedPairWithEpsilon{ currTransition.state, transition.state };
+				if (visitedStateToStateWithEpsilon.find(visitedPairWithEpsilon) != visitedStateToStateWithEpsilon.end())
+				{
+					continue;
+				}
+				visitedStateToStateWithEpsilon.insert(visitedPairWithEpsilon);
+#endif
 				q.push_back(TraverseTransition{ (int)transition.state, currTransition.accumulatedOutput + transition.output });
 			}
 		}

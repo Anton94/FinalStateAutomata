@@ -53,5 +53,5 @@ private: // TODO: the key has to be something else, not a whole string!
 
 private: // I do not want to copy this big structures, just to move them arround...
 	//FinalStateTransducer(const FinalStateTransducer& other) = delete; // TODO Whyyyy not able....
-	FinalStateTransducer& operator=(const FinalStateTransducer& other) = delete;
+	//FinalStateTransducer& operator=(const FinalStateTransducer& other) = delete;
 };
