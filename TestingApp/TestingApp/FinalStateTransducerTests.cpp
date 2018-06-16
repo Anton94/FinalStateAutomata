@@ -16,36 +16,106 @@ static FinalStateTransducerTestCases FSTTestcases;
 void PopulateWithTestCases()
 {
 	FSTTestcases["a:5"] = {
-		{ "", {  } },
-		{ "b", {  } },
-		{ "aa", {  } },
+		{ "", {} },
+		{ "b", {} },
+		{ "aa", {} },
 		{ "a", { 5 } },
 	};
-
 	FSTTestcases["a:5 *"] = {
-		{ "", {  } },
-		{ "b", {  } },
+		{ "", { 0 } },
+		{ "b", {} },
 		{ "a",{ 5 } },
 		{ "aa", { 10 } },
 	};
-
 	FSTTestcases["a:5 a:100 | *"] = {
-		{ "", {  } },
-		{ "b", {  } },
+		{ "", { 0 } },
+		{ "b", {} },
 		{ "a",{ 5, 100 } },
 		{ "aa", { 10, 105, 200 } },
 		{ "aaa", { 15, 110, 205, 300 } },
 		{ "aaaa", { 20, 115, 210, 305, 400 } },
 		{ "aaaaa", { 25, 120, 215, 310, 405, 500 } },
 	};
-
 	FSTTestcases["a:5 b:100 | c:1 |"] = {
-		{ "", {  } },
-		{ "x", { } },
-		{ "xasffsaq", { } },
+		{ "", {} },
+		{ "x", {} },
+		{ "xasffsaq", {} },
 		{ "a", { 5 } },
 		{ "c", { 1 } },
 		{ "b", { 100 } },
+	};
+	FSTTestcases["a:5 b:100 | c:1 ."] = {
+		{ "", {} },
+		{ "x", {} },
+		{ "c", {} },
+		{ "b", {} },
+		{ "c", {} },
+		{ "ab", {} },
+		{ "xasffsaq", {} },
+		{ "ac", { 6 } },
+		{ "bc", { 101 } },
+	};
+	FSTTestcases["a:5 b:100 | c:1 . *"] = {
+		{ "", { 0 } },
+		{ "x", {} },
+		{ "c", {} },
+		{ "b", {} },
+		{ "c", {} },
+		{ "ab", {} },
+		{ "bcc", {} },
+		{ "xasffsaq", {} },
+		{ "ac", { 6 } },
+		{ "bc", { 101 } },
+		{ "bcbc", { 202 } },
+		{ "bcac", { 107 } },
+		{ "acbc", { 107 } },
+		{ "acac", { 12 } },
+		{ "acacbc", { 113 } },
+	};
+	FSTTestcases["a:5 b:100 | c:1 . * d:3 |"] = {
+		{ "", { 0 } },
+		{ "x", {} },
+		{ "c", {} },
+		{ "b", {} },
+		{ "c", {} },
+		{ "ab", {} },
+		{ "bcc", {} },
+		{ "xasffsaq", {} },
+		{ "acacbcd", {} },
+		{ "dacacbc", {} },
+		{ "d", { 3 } },
+		{ "ac", { 6 } },
+		{ "bc", { 101 } },
+		{ "bcbc", { 202 } },
+		{ "bcac", { 107 } },
+		{ "acbc", { 107 } },
+		{ "acac", { 12 } },
+		{ "acacbc", { 113 } },
+	};
+	FSTTestcases["a:5 b:100 | c:1 . * d:3 | *"] = {
+		{ "", { 0 } },
+		{ "x", {} },
+		{ "c", {} },
+		{ "b", {} },
+		{ "c", {} },
+		{ "ab", {} },
+		{ "bcc", {} },
+		{ "xasffsaq", {} },
+		{ "dacdadcd", {} },
+		{ "d", { 3 } },
+		{ "ac", { 6 } },
+		{ "bc", { 101 } },
+		{ "bcbc", { 202 } },
+		{ "bcac", { 107 } },
+		{ "acbc", { 107 } },
+		{ "acac", { 12 } },
+		{ "acacbc", { 113 } },
+		{ "acacbcd", { 116 } },
+		{ "dacacbc", { 116 } },
+		{ "dacacbcd", { 119 } },
+		{ "acacd", { 15 } },
+		{ "dacacd", { 18 } },
+		{ "dacdacd", { 21 } },
 	};
 }
 
@@ -54,7 +124,8 @@ void RunFinalStateTransducerTests()
 	PopulateWithTestCases();
 
 	auto failedTests = 0;
-	std::cout << "RUNNING " << FSTTestcases.size() << " FINAL STATE TRANSDUCER TESTS:\n";
+	auto testCases = 0;
+	std::cout << "RUNNING TESTS WITH " << FSTTestcases.size() << " REG EXPRS:\n";
 	for (const auto& testCase : FSTTestcases)
 	{
 		const auto& regExpr = testCase.first;
@@ -62,10 +133,10 @@ void RunFinalStateTransducerTests()
 
 		RegularFinalStateTransducerBuilder ts(regExpr.c_str());
 		auto transducer = ts.GetBuildedTransducer();
-		if (!transducer) { std::cout << "Something went wrong...\n"; continue; }
 
 		int testNumber = 0;
 		const auto& wordForTraversing = testCase.second;
+		testCases += wordForTraversing.size();
 		for (const auto& wordAndOutputs : wordForTraversing)
 		{
 			std::unordered_set<size_t> outputs;
@@ -74,15 +145,16 @@ void RunFinalStateTransducerTests()
 
 			transducer->TraverseWithWord(testWord.c_str(), outputs);
 
-			std::cout << "\t" << testNumber << ": \"" << testWord << "\", ";
+			std::cout << "\t" << testNumber << ": \"" << testWord << "\" ";
 			for (const auto& expectedOutput : testOutputs)
 			{
 				std::cout << expectedOutput << " ";
 			}
 
-			bool passed = true;
+			bool passed = false;
 			if (outputs.size() == testOutputs.size())
 			{
+				passed = true;
 				for (const auto& expectedOutput : testOutputs)
 				{
 					if (outputs.find(expectedOutput) == outputs.end())
@@ -115,11 +187,11 @@ void RunFinalStateTransducerTests()
 
 	if (failedTests > 0)
 	{
-		std::cout << "Passed " << FSTTestcases.size() - failedTests << " tests.\n";
+		std::cout << "Passed " << testCases - failedTests << " tests.\n";
 		std::cout << "Failed " << failedTests << " tests.\n";
 	}
 	else
 	{
-		std::cout << "Passed all " << FSTTestcases.size() << " tests.\n";
+		std::cout << "Passed all " << testCases << " tests.\n";
 	}
 }
