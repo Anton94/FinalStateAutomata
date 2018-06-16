@@ -20,7 +20,9 @@ RegularFinalStateTransducerBuilder::RegularFinalStateTransducerBuilder(const cha
 void RegularFinalStateTransducerBuilder::build()
 {
 	//stack.reserve(regExpr.length() / 4); // Some 'random' optimization...
+#if defined(INFO)
 	std::cout << "Buidling a final state transudcer with regular expression \"" << regExprHolder << "\".\n";
+#endif
 	int currLength, separatorAt;
 	char* pRegExpr = regExprHolder,
 		*pCurrStart;
@@ -72,7 +74,10 @@ void RegularFinalStateTransducerBuilder::build()
 		}
 		else
 		{
-			++pRegExpr;
+			if (*pRegExpr)
+			{
+				++pRegExpr;
+			}
 			stack.push_back(FinalStateTransducer(pCurrStart, separatorAt, currLength));
 		}
 	}
@@ -81,7 +86,9 @@ void RegularFinalStateTransducerBuilder::build()
 		(stack.size() > 1 ? "There are more than one objects left to apply operations to."
 			: "There are no constructed objects."))	;
 	transducer = &stack[0];
+#if defined(INFO)
 	std::cout << "Done buidling it.\n";
+#endif
 }
 
 void RegularFinalStateTransducerBuilder::executeStarOperation()

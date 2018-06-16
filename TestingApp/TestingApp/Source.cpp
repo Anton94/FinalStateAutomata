@@ -5,7 +5,7 @@
 #include "Tests.h"
 
 //const char * regExpr = "a:5 * a:100 * | *"; // inf loop, inf outputs..
-const char * regExpr = "a:5 b:100 | *";
+const char * regExpr = "a:5 b:100 | c:1 |";
 
 const char* wordsForTraversion[] = {
 	"b",
@@ -14,7 +14,7 @@ const char* wordsForTraversion[] = {
 	"aaa",
 	"aaaa",
 	"ababa",
-	"abba",
+	"abbacd",
 };
 
 void ProcessCommandLineArguments(int argc, char *argv[])
@@ -23,10 +23,10 @@ void ProcessCommandLineArguments(int argc, char *argv[])
 	{
 		if (std::strcmp(argv[i], "-validateInput") == 0)
 		{
-			std::cout << "---Validating the input string...\n";
+			std::cout << "---Validating the input string \"" << regExpr << "\"...\n";
 			auto isValid = checkInputCorrectness(regExpr);
 			std::cout << (isValid ? "---[valid]" : "***[NOT valid]")
-				<< ".\n";
+				<< ".\n\n";
 		}
 	}
 }
@@ -35,13 +35,14 @@ int main(int argc, char *argv[])
 {
 	ProcessCommandLineArguments(argc, argv);
 	//RunInputValidationTests();
+	RunFinalStateTransducerTests();
 
-	RegularFinalStateTransducerBuilder builder(regExpr);
-	FinalStateTransducer* tr = builder.GetBuildedTransducer();
-
-	for (size_t i = 0, count = sizeof(wordsForTraversion) / sizeof(const char*); i < count; ++i)
-	{
-		tr->TraverseWithWord(wordsForTraversion[i]);
-	}
+	//RegularFinalStateTransducerBuilder builder(regExpr);
+	//FinalStateTransducer* tr = builder.GetBuildedTransducer();
+	//std::unordered_set<size_t> outputs;
+	//for (size_t i = 0, count = sizeof(wordsForTraversion) / sizeof(const char*); i < count; ++i)
+	//{
+	//	tr->TraverseWithWord(wordsForTraversion[i], outputs);
+	//}
 	return 0;
 }

@@ -10,7 +10,7 @@ FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int len
 	*(regExpr + separator) = '\0';
 	*(regExpr + length) = '\0';
 	const char* pOutputNumber = regExpr + separator + 1; // + ':'.
-	int outputNumber = atoi(pOutputNumber);
+	size_t outputNumber = atoi(pOutputNumber);
 #if defined(INFO)
 		std::cout << "Creating a transducer for word \"" << word << "\" with output number " << outputNumber << std::endl; // Only info purposes.
 #endif
@@ -138,11 +138,13 @@ void FinalStateTransducer::MakeSingleInitialState(int newInitialStateIndex)
 	InitialStates.insert(newInitialStateIndex);
 }
 
-bool FinalStateTransducer::TraverseWithWord(const char* word) const
+bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
 {
 	if (!word) return false;
 	const char* pWord = word;
+#if defined(INFO)
 	std::cout << "Traversing with \"" << pWord << "\" word...\n";
+#endif
 	// TODO: check for epsilon cycles.. (inf outputs then for the word...)
 	char strTmp[] = "x";
 
@@ -167,7 +169,9 @@ bool FinalStateTransducer::TraverseWithWord(const char* word) const
 
 		if (q.empty())
 		{
+#if defined(INFO)
 			std::cout << "\tThe word is not from this regular expression.\n";
+#endif
 			return false;
 		}
 		assert(currTransition.state == -1); // Only the level separator can have negative state's index.
@@ -238,17 +242,23 @@ bool FinalStateTransducer::TraverseWithWord(const char* word) const
 		q.pop_front();
 	}
 
-	if (accumulatedOutputs.empty())
+	outputs.clear();
+	outputs.swap(accumulatedOutputs);
+
+	if (accumulatedOutputs.empty() && *word) // It is not an empty word
 	{
+#if defined(INFO)
 		std::cout << "\tThe word is not from this regular expression.\n";
+#endif
 		return false;
 	}
 
+#if defined(INFO)
+	std::cout << "END traversing.\n";
 	for (const auto& accumulatedOutput : accumulatedOutputs)
 	{
 		std::cout << "\tAn output: " << accumulatedOutput << ".\n";
 	}
-
-	std::cout << "END traversing.\n";
+#endif
 	return true;
 }

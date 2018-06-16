@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="AssertLog.cpp" />
     <ClCompile Include="FinalStateTransducer.cpp" />
+    <ClCompile Include="FinalStateTransducerTests.cpp" />
     <ClCompile Include="InputTests.cpp" />
     <ClCompile Include="InputValidator.cpp" />
     <ClCompile Include="RegularFinalStateTransducerBuilder.cpp" />

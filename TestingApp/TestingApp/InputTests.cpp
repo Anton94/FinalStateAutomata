@@ -42,7 +42,7 @@ bool TestInputValidation(const char* regExpr, bool expectedResult, int testNumbe
 void RunInputValidationTests()
 {
 	auto failedTests = 0;
-	std::cout << "Running " << inputValidationRegEprs.size() << " input validation tests.\n";
+	std::cout << "Running " << inputValidationRegEprs.size() << " input validation tests:\n";
 	for (int i = 0, bound = (int)inputValidationRegEprs.size(); i < bound; ++i)
 	{
 		const auto& input = inputValidationRegEprs[i];
@@ -57,6 +57,6 @@ void RunInputValidationTests()
 	}
 	else
 	{
-		std::cout << "Passed all " << inputValidationRegEprs.size() - failedTests << " tests.\n";
+		std::cout << "Passed all " << inputValidationRegEprs.size() << " tests.\n";
 	}
 }

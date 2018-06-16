@@ -19,7 +19,7 @@
 struct Transition
 {
 	size_t state; // The destination state(index in a vector)
-	int output; // Some number which is the output on the second ?strip? of the transducer.
+	size_t output; // Some number which is the output on the second ?strip? of the transducer.
 };
 
 class FinalStateTransducer
@@ -43,7 +43,7 @@ public:
 	void MakeSingleInitialState(int newInitialStateIndex);
 
 	// Only on a real-time transducer.
-	bool FinalStateTransducer::TraverseWithWord(const char* word) const;
+	bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
 private: // TODO: the key has to be something else, not a whole string!
 	typedef std::unordered_map<std::string, std::vector<Transition>>
 		StateTransitions;
