@@ -173,7 +173,7 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 	}
 
 #if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
-	typedef std::pair<size_t, size_t> VisitedPair; // .first is the source, .second is the destination state
+	typedef std::tuple<size_t, size_t, size_t> VisitedPair; // .first is the source, .second is the destination state
 	std::unordered_set<VisitedPair,
 						boost::hash<VisitedPair>
 						> visitedStateToStateWithEpsilon;
@@ -222,7 +222,8 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 				for (const auto& transition : it->second) // Add them to the current level, because we have reached them withoud reading a symbol.
 				{
 #if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
-					const std::pair<size_t, size_t> visitedPairWithEpsilon { currTransition.state, transition.state };
+					const auto accomulatedOutput = currTransition.accumulatedOutput + transition.output;
+					const std::tuple<size_t, size_t, size_t> visitedPairWithEpsilon { currTransition.state, transition.state, accomulatedOutput };
 					if (visitedStateToStateWithEpsilon.find(visitedPairWithEpsilon) != visitedStateToStateWithEpsilon.end())
 					{
 						continue;
@@ -265,7 +266,8 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 			for (const auto& transition : it->second) // Add them to the current level, because we have reached them withoud reading a symbol.
 			{
 #if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
-				const std::pair<size_t, size_t> visitedPairWithEpsilon{ currTransition.state, transition.state };
+				const auto accomulatedOutput = currTransition.accumulatedOutput + transition.output;
+				const std::tuple<size_t, size_t, size_t> visitedPairWithEpsilon{ currTransition.state, transition.state, accomulatedOutput };
 				if (visitedStateToStateWithEpsilon.find(visitedPairWithEpsilon) != visitedStateToStateWithEpsilon.end())
 				{
 					continue;
