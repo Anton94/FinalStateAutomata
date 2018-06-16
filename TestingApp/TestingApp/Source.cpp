@@ -4,8 +4,18 @@
 #include "InputValidator.h"
 #include "Tests.h"
 
-//const char * regExpr = "a:5 * a:100 * | *"; // inf loop
-const char * regExpr = "a:5 a:100 | *";
+//const char * regExpr = "a:5 * a:100 * | *"; // inf loop, inf outputs..
+const char * regExpr = "a:5 b:100 | *";
+
+const char* wordsForTraversion[] = {
+	"b",
+	"a",
+	"aa",
+	"aaa",
+	"aaaa",
+	"ababa",
+	"abba",
+};
 
 void ProcessCommandLineArguments(int argc, char *argv[])
 {
@@ -29,15 +39,9 @@ int main(int argc, char *argv[])
 	RegularFinalStateTransducerBuilder builder(regExpr);
 	FinalStateTransducer* tr = builder.GetBuildedTransducer();
 
-	tr->TraverseWithWord("");
-	tr->TraverseWithWord("a");
-	tr->TraverseWithWord("aa");
-	tr->TraverseWithWord("aaa");
-	tr->TraverseWithWord("aaaa");
-	tr->TraverseWithWord("aaaaa");
-	tr->TraverseWithWord("aaaaaa");
-	tr->TraverseWithWord("a");
-	tr->TraverseWithWord("b");
-
+	for (size_t i = 0, count = sizeof(wordsForTraversion) / sizeof(const char*); i < count; ++i)
+	{
+		tr->TraverseWithWord(wordsForTraversion[i]);
+	}
 	return 0;
 }
