@@ -245,6 +245,36 @@ void PopulateWithTestCases()
 		{ "abbcde", { 17 } },
 		{ "abbbbbcde", { 23 } },
 	};
+	FSTTestcases["abcde:15"] = {
+		{ "", {} },
+		{ "a", {} },
+		{ "ab", {} },
+		{ "abc", {} },
+		{ "abcd", {} },
+		{ "abcdee", {} },
+		{ "bcde", {} },
+		{ "bdf", {} },
+		{ "ae", {} },
+		{ "abcde", { 15 } },
+	};
+	FSTTestcases["abcde:15 +"] = {
+		{ "", {} },
+		{ "a", {} },
+		{ "ab", {} },
+		{ "abc", {} },
+		{ "abcd", {} },
+		{ "abcdee", {} },
+		{ "bcde", {} },
+		{ "bdf", {} },
+		{ "ae", {} },
+		{ "abcdeabcd", {} },
+		{ "abcdea", {} },
+		{ "abcdeabcd", {} },
+		{ "abcdea", {} },
+		{ "abcde", { 15 } },
+		{ "abcdeabcde", { 30 } },
+		{ "abcdeabcdeabcde", { 45 } },
+	};
 }
 
 void RunFinalStateTransducerTests()
@@ -261,6 +291,7 @@ void RunFinalStateTransducerTests()
 
 		RegularFinalStateTransducerBuilder ts(regExpr.c_str());
 		auto transducer = ts.GetBuildedTransducer();
+		transducer->Expand();
 
 		int testNumber = 0;
 		const auto& wordForTraversing = testCase.second;
