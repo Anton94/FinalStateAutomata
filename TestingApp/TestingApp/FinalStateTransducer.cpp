@@ -148,6 +148,61 @@ void FinalStateTransducer::MakeSingleInitialState(int newInitialStateIndex)
 	InitialStates.insert(newInitialStateIndex);
 }
 
+void FinalStateTransducer::Expand()
+{
+	std::string tmpWord = "x"; // TODO: make the transitions const char* or something better than std::string...
+
+	for (size_t stateIndex = 0, bound = Delta.size(); stateIndex < bound; ++stateIndex)
+	{
+		StateTransitions transitionsExpanded;
+		StateTransitions transitions = std::move(Delta[stateIndex]); // To avoid reference invalidation when(if) Delta resizes
+		for (auto& transition : transitions)
+		{
+			// q --word--> [<r0, out0>, <r1, out1>, ... , <rk, ok>]
+			const auto& transitionWord = transition.first;
+			const auto transitionWordLen = transitionWord.length();
+			if (transitionWordLen > 1)
+			{
+				auto& transitionDestinations = transition.second;
+				for (auto& transitionDestination : transitionDestinations)
+				{
+					// q --word--> <r0, out0> => q --word[0]--> <r00, out0> --word[1]--> < r01, 0> --word[2]--> ... --word[len-1]--> <r0,0>
+
+					const auto newStatesCount = transitionWordLen - 1;
+					const auto currStatesCount = Delta.size();
+					Delta.resize(currStatesCount + newStatesCount);
+					auto newStateIndex = currStatesCount;
+
+					// q --word[0]--> <r00, out0>
+					const char* pWord = transitionWord.c_str();
+					tmpWord[0] = *pWord++;
+					transitionsExpanded[tmpWord].push_back(Transition{ newStateIndex, transitionDestination.output });
+
+					for (auto bound = currStatesCount + newStatesCount - 1; newStateIndex < bound; ++newStateIndex)
+					{
+						assert(*pWord);
+						tmpWord[0] = *pWord++;
+						Delta[newStateIndex][tmpWord].push_back(Transition{ newStateIndex + 1, 0 }); // rk --word[k]--> <rk+1, 0>
+					}
+
+					assert(*pWord);
+					tmpWord[0] = *pWord++;
+					Delta[newStateIndex][tmpWord].push_back(Transition{ transitionDestination.state, 0 });
+				}
+
+			}
+			else
+			{
+				transitionsExpanded[transitionWord] = std::move(transition.second);
+			}
+		}
+
+		Delta[stateIndex] = std::move(transitionsExpanded);
+	}
+}
+
+// TODO: if the transducer is a real-time one(only single symbol on each transition, no epsilon transitions!)
+// then optimize and remove bunch of logic
 bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
 {
 	if (!word) return false;
