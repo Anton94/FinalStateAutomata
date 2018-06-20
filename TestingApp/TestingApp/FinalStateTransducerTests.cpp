@@ -13,7 +13,7 @@ typedef std::unordered_map<std::string, // The regular expression
 
 static FinalStateTransducerTestCases FSTTestcases;
 
-void PopulateWithTestCases()
+static void PopulateWithTestCases()
 {
 	FSTTestcases["a:5"] = {
 		{ "", {} },
