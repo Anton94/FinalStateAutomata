@@ -1,6 +1,7 @@
 #include "SetOperations.h"
 
-void TransitiveClosure(std::unordered_map<size_t, std::unordered_set<size_t>>& r)
+
+void TransitiveClosure(SetOfTransitions& r)
 {
 	auto cR = r; // {<a, [b]>}, an map of states 'a' and their destinations, i.e. a set of b's ([b])
 
