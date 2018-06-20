@@ -44,7 +44,7 @@ public:
 
 	void Expand(); // Each transition to be with only single symbol(or epsilon)
 
-	static void TransitiveClosure(std::unordered_map<size_t, std::unordered_set<size_t>>& R);
+	void RemoveEpsilon();
 
 	// Only on a real-time transducer.
 	bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;

@@ -153,13 +153,16 @@
     <ClCompile Include="InputTests.cpp" />
     <ClCompile Include="InputValidator.cpp" />
     <ClCompile Include="RegularFinalStateTransducerBuilder.cpp" />
+    <ClCompile Include="SetOperations.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="SetOperationsTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssertLog.h" />
     <ClInclude Include="FinalStateTransducer.h" />
     <ClInclude Include="InputValidator.h" />
     <ClInclude Include="RegularFinalStateTransducerBuilder.h" />
+    <ClInclude Include="SetOperations.h" />
     <ClInclude Include="Tests.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
