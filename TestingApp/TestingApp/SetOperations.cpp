@@ -33,3 +33,11 @@ void TransitiveClosure(SetOfTransitions& r)
 
 	r = std::move(cR);
 }
+
+void AddIdentity(SetOfTransitions& R)
+{
+	for (auto& transitions : R)
+	{
+		transitions.second.insert(transitions.first);
+	}
+}
