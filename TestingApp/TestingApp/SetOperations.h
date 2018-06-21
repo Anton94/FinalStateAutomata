@@ -8,3 +8,5 @@ typedef std::unordered_map<size_t, std::unordered_set<size_t>> SetOfTransitions;
 void TransitiveClosure(SetOfTransitions& R);
 
 void AddIdentity(SetOfTransitions& R);
+
+void Print(const SetOfTransitions& R);

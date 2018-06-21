@@ -1,3 +1,4 @@
+#include <iostream>
 #include "SetOperations.h"
 
 
@@ -39,5 +40,21 @@ void AddIdentity(SetOfTransitions& R)
 	for (auto& transitions : R)
 	{
 		transitions.second.insert(transitions.first);
+	}
+}
+
+void Print(const SetOfTransitions& R)
+{
+	for (const auto& transitionAndDestinations : R)
+	{
+		const auto& transition = transitionAndDestinations.first;
+		const auto& destinations = transitionAndDestinations.second;
+
+		std::cout << "\t{ " << transition << " - ";
+		for (const auto& destination : destinations)
+		{
+			std::cout << destination << " ";
+		}
+		std::cout << "}\n";
 	}
 }
