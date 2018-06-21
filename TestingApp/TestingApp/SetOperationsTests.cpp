@@ -8,7 +8,7 @@ typedef std::vector<std::pair<
 
 static TransitiveSetTestCases transitiveSetTestCases;
 
-static void PopulateWithTestCases()
+static void PopulateWithTransitiveClosureTestCases()
 {
 	transitiveSetTestCases = {
 		{
@@ -163,7 +163,7 @@ static void PopulateWithTestCases()
 				{ 6, { 4, 5, 6 } },
 			},
 		},
-		// Missing destinations
+		// Missing destinationss
 		{
 			{
 				{ 1, { 2, 3, 4 } },
@@ -181,20 +181,54 @@ static void PopulateWithTestCases()
 	};
 }
 
-void print(const SetOfTransitions& set)
-{
-	for (const auto& transitionAndDestinations : set)
-	{
-		const auto& transition = transitionAndDestinations.first;
-		const auto& destinations = transitionAndDestinations.second;
+static TransitiveSetTestCases addIdentityTestCases;
 
-		std::cout << "\t{ " << transition << " - ";
-		for (const auto& destination : destinations)
+static void PopulateWithAddIdentityTestCases()
+{
+	addIdentityTestCases = {
 		{
-			std::cout << destination << " ";
-		}
-		std::cout << "}\n";
-	}
+			{
+				{ 1, { 2 } },
+				{ 2, { 5 } },
+				{ 5, { 1 } },
+			},
+			{
+				{ 1, { 1, 2 } },
+				{ 2, { 2, 5 } },
+				{ 5, { 5, 1 } },
+			},
+		},
+		{
+			{
+				{ 1, { 2, 3, 1 } },
+				{ 2, { 5, 7, 9 } },
+				{ 5, { 1 } },
+			},
+			{
+				{ 1, { 2, 3, 1 } },
+				{ 2, { 2, 5, 7, 9 } },
+				{ 5, { 5, 1 } },
+			},
+		},
+		{
+			{
+				{ 1, { 2, 3, 1 } },
+				{ 2, { 5, 7, 9 } },
+				{ 5, { 1 } },
+				{ 6, { 6 } },
+				{ 8, { 15 } },
+				{ 9, { } },
+			},
+			{
+				{ 1, { 2, 3, 1 } },
+				{ 2, { 2, 5, 7, 9 } },
+				{ 5, { 5, 1 } },
+				{ 6, { 6 } },
+				{ 8, { 8, 15 } },
+				{ 9, { 9 } },
+			},
+		},
+	};
 }
 
 bool equal(const SetOfTransitions& l, const SetOfTransitions& r)
@@ -226,7 +260,7 @@ bool equal(const SetOfTransitions& l, const SetOfTransitions& r)
 
 void RunTransitiveClosureTests()
 {
-	PopulateWithTestCases();
+	PopulateWithTransitiveClosureTestCases();
 
 	auto failedTests = 0;
 	std::cout << "RUNNING TESTS WITH " << transitiveSetTestCases.size() << " TRANSITIVE CLOSURE TESTS:\n";
@@ -248,9 +282,9 @@ void RunTransitiveClosureTests()
 		{
 			std::cout << "failed!\n"
 				<< "Exprected the transitive closure of:\n";
-			print(outputSet);
+			Print(outputSet);
 			std::cout << "To be equal to the set:\n";
-			print(inputSetClosed);
+			Print(inputSetClosed);
 			++failedTests;
 		}
 	}
@@ -263,5 +297,47 @@ void RunTransitiveClosureTests()
 	else
 	{
 		std::cout << "Passed all " << transitiveSetTestCases.size() << " tests.\n";
+	}
+}
+
+void RunAddIdentityTests()
+{
+	PopulateWithAddIdentityTestCases();
+
+	auto failedTests = 0;
+	std::cout << "RUNNING TESTS WITH " << addIdentityTestCases.size() << " ADD IDENTITY TESTS:\n";
+	for (size_t i = 0, bound = addIdentityTestCases.size(); i < bound; ++i)
+	{
+		std::cout << "\t" << i << ": ";
+		const auto& inputSet = addIdentityTestCases[i].first;
+		const auto& outputSet = addIdentityTestCases[i].second;
+
+		auto inputSetAddedIdentity = addIdentityTestCases[i].first;
+
+		AddIdentity(inputSetAddedIdentity);
+
+		if (equal(inputSetAddedIdentity, outputSet))
+		{
+			std::cout << "passed\n";
+		}
+		else
+		{
+			std::cout << "failed!\n"
+				<< "Exprected the added identity of:\n";
+			Print(outputSet);
+			std::cout << "To be equal to the set:\n";
+			Print(inputSetAddedIdentity);
+			++failedTests;
+		}
+	}
+
+	if (failedTests > 0)
+	{
+		std::cout << "Passed " << addIdentityTestCases.size() - failedTests << " tests.\n";
+		std::cout << "Failed " << failedTests << " tests.\n";
+	}
+	else
+	{
+		std::cout << "Passed all " << addIdentityTestCases.size() << " tests.\n";
 	}
 }
