@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <boost/functional/hash.hpp>
 
 struct Transition
 {
@@ -16,6 +17,16 @@ struct Transition
 	bool operator!=(const Transition& right) const
 	{
 		return !operator==(right);
+	}
+};
+
+template<> struct std::hash<Transition>
+{
+	typedef Transition argument_type;
+	typedef std::size_t result_type;
+	result_type operator()(argument_type const& s) const noexcept
+	{
+		return boost::hash<std::pair<std::size_t, std::size_t>>{}({ s.state, s.output }); // reusing the boost hash 
 	}
 };
 
