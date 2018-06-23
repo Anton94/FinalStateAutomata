@@ -5,6 +5,7 @@
 #include <boost/functional/hash.hpp>
 #include "FinalStateTransducer.h"
 #include "AssertLog.h"
+#include "SetOperations.h"
 
 FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int length) // The regular expression should be of type: 'word:number'
 {
@@ -16,17 +17,20 @@ FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int len
 #if defined(INFO)
 		std::cout << "Creating a transducer for word \"" << word << "\" with output number " << outputNumber << std::endl; // Only info purposes.
 #endif
-																														   // Creating a transducer which accepts only the given word.
+	// Creating a transducer which accepts only the given word.
 	Delta.resize(2);
 
 	Delta[0][word].push_back(Transition{ 1, outputNumber }); // One transition: 0 -> 1 via word @word and output @outputNumber.
 	FinalStates.insert(1); // 1 is a final state.
 	InitialStates.insert(0); // q0 which is 0 is the initial state
+
+	RecognizingEmptyWord = false;
 }
 
 void FinalStateTransducer::CloseStar()
 {
 	ClosePlus();
+	FinalStates.clear();
 	FinalStates.insert(Delta.size() - 1); // Add the new state as a final,
 }
 
@@ -201,6 +205,92 @@ void FinalStateTransducer::Expand()
 	}
 }
 
+// Separates the epsilon transitions in @v (those with @output 0) to the set @s
+void SeparateEpsilonTransitions(std::vector<Transition>& v, size_t output, std::unordered_set<size_t>& s)
+{
+	int last = v.size() - 1;
+	int curr = 0;
+	while (curr <= last)
+	{
+		auto& currTransition = v[curr];
+
+		if (currTransition.output == output)
+		{
+			s.insert(currTransition.state);
+			// Move the last element to it's place and next time check it.
+			currTransition = v[last];
+			--last;
+		}
+		else
+		{
+			++curr;
+		}
+	}
+
+	v.resize(last + 1); // TODO: better way for removing them.
+}
+
+void FinalStateTransducer::RemoveEpsilon()
+{
+	SetOfTransitions Ce;
+
+	// Add only the states which has (e,0) transition (i.e. transition with empty word and 0 output to another state)
+	// and in the same time remove them from Delta.
+	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	{
+		auto& state = Delta[i];
+
+		auto it = state.find("");
+		if (it != state.end())
+		{
+			SeparateEpsilonTransitions(it->second, 0, Ce[i]);
+			if (it->second.size() == 0)
+			{
+				Delta[i].erase("");
+			}
+		}
+	}
+
+	TransitiveClosure(Ce);
+//	AddIdentity(Ce); // I do not need it
+
+	// New Delta
+	for (auto& state : Delta)
+	{
+		for (auto& transitionWordAndDestinations : state)
+		{
+			// TODO: change to set??
+			auto destinationsCopy = transitionWordAndDestinations.second;
+			for (auto& transition : destinationsCopy)
+			{
+				for (auto newDest : Ce[transition.state])
+				{
+					auto t = Transition{ newDest, transition.output };
+
+					// TODO Remove; there is no case(AFAIK) in which they can duplicate
+					for (auto& tr : transitionWordAndDestinations.second)
+					{
+						if (tr.state == t.state && tr.output == t.output)
+							assert(false);
+					}
+					// END
+					transitionWordAndDestinations.second.push_back(Transition{ newDest, transition.output });
+				}
+			}
+		}
+	}
+
+	// Change the new initial states
+	std::unordered_set<size_t> newInitialStates = InitialStates;
+	for (auto& initialStateIndex : InitialStates)
+	{
+		newInitialStates.insert(Ce[initialStateIndex].begin(), Ce[initialStateIndex].end());
+	}
+	InitialStates = std::move(newInitialStates);
+
+	//RecognizingEmptyWord = HasInitialStateWhichIsFinal();
+}
+
 // TODO: if the transducer is a real-time one(only single symbol on each transition, no epsilon transitions!)
 // then optimize and remove bunch of logic
 bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
@@ -335,11 +425,14 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 
 		q.pop_front();
 	}
+	//if (!*word && RecognizingEmptyWord) // The input word was ""
+	//{
+	//	accumulatedOutputs.insert(0);
+	//}
 
-	outputs.clear();
-	outputs.swap(accumulatedOutputs);
+	outputs = std::move(accumulatedOutputs);
 
-	if (accumulatedOutputs.empty() && *word) // It is not an empty word
+	if (outputs.empty())
 	{
 #if defined(INFO)
 		std::cout << "\tThe word is not from this regular expression.\n";
@@ -349,10 +442,23 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 
 #if defined(INFO)
 	std::cout << "END traversing.\n";
-	for (const auto& accumulatedOutput : accumulatedOutputs)
+	for (const auto& output : outputs)
 	{
-		std::cout << "\tAn output: " << accumulatedOutput << ".\n";
+		std::cout << "\tAn output: " << output << ".\n";
 	}
 #endif
 	return true;
+}
+
+
+bool FinalStateTransducer::HasInitialStateWhichIsFinal() const
+{
+	for (const auto& initialState : InitialStates)
+	{
+		if (FinalStates.find(initialState) != FinalStates.end())
+		{
+			return true;
+		}
+	}
+	return false;
 }

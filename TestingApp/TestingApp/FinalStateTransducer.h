@@ -47,13 +47,18 @@ public:
 	void RemoveEpsilon();
 
 	// Only on a real-time transducer.
-	bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
+	bool TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
+
+private:
+	bool HasInitialStateWhichIsFinal() const;
 private: // TODO: the key has to be something else, not a whole string!
 	typedef std::unordered_map<std::string, std::vector<Transition>>
 		StateTransitions;
 	std::vector<StateTransitions> Delta; // State at position 'i' with word 'w' will lead to state(s) ('state') (which are indexes in the Delta vector) with output ('output') some number.
 	std::unordered_set<size_t> FinalStates;
 	std::unordered_set<size_t> InitialStates;
+
+	bool RecognizingEmptyWord;
 
 private: // I do not want to copy this big structures, just to move them arround...
 	//FinalStateTransducer(const FinalStateTransducer& other) = delete; // TODO Whyyyy not able....

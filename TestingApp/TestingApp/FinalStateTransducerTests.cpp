@@ -277,6 +277,8 @@ static void PopulateWithTestCases()
 	};
 }
 
+
+// TODO: test for e:5 word !!
 void RunFinalStateTransducerTests()
 {
 	PopulateWithTestCases();
@@ -291,7 +293,9 @@ void RunFinalStateTransducerTests()
 
 		RegularFinalStateTransducerBuilder ts(regExpr.c_str());
 		auto transducer = ts.GetBuildedTransducer();
+		// If some test fails try to skip Expand or RemoveEpsilon.
 		transducer->Expand();
+		transducer->RemoveEpsilon();
 
 		int testNumber = 0;
 		const auto& wordForTraversing = testCase.second;
