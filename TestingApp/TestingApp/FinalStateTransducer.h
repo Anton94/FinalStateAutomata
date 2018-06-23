@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include "SetOperations.h"
 
 
 /*
@@ -15,13 +16,6 @@
 	I will denote the transitions between states like that:
 	q0 --word:number--> q1 ('e' will be epsilon, i.e. the empty word)
 */
-
-struct Transition
-{
-	size_t state; // The destination state(index in a vector)
-	size_t output; // Some number which is the output on the second ?strip? of the transducer.
-};
-
 class FinalStateTransducer
 {
 public:
@@ -54,7 +48,8 @@ private:
 private: // TODO: the key has to be something else, not a whole string!
 	typedef std::unordered_map<std::string, std::vector<Transition>>
 		StateTransitions;
-	std::vector<StateTransitions> Delta; // State at position 'i' with word 'w' will lead to state(s) ('state') (which are indexes in the Delta vector) with output ('output') some number.
+	typedef std::vector<StateTransitions> DeltaType;
+	DeltaType Delta; // State at position 'i' with word 'w' will lead to state(s) ('state') (which are indexes in the Delta vector) with output ('output') some number.
 	std::unordered_set<size_t> FinalStates;
 	std::unordered_set<size_t> InitialStates;
 

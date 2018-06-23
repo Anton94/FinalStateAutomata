@@ -5,7 +5,6 @@
 #include <boost/functional/hash.hpp>
 #include "FinalStateTransducer.h"
 #include "AssertLog.h"
-#include "SetOperations.h"
 
 FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int length) // The regular expression should be of type: 'word:number'
 {
@@ -274,7 +273,7 @@ void FinalStateTransducer::RemoveEpsilon()
 							assert(false);
 					}
 					// END
-					transitionWordAndDestinations.second.push_back(Transition{ newDest, transition.output });
+					transitionWordAndDestinations.second.push_back(std::move(t));
 				}
 			}
 		}
