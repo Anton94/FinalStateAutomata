@@ -6,6 +6,16 @@ typedef std::vector<std::pair<
 							  SetOfTransitions>> // The desired output one.
 	TransitiveSetTestCases;
 
+struct ClosureEpsilonTestCase
+{
+	SetOfTransitionsWithOutputs input; // The input set.
+	SetOfTransitionsWithOutputs output; // The desired output one.
+	bool inf; // For the infinite state.
+};
+
+typedef std::vector<ClosureEpsilonTestCase>
+	ClosureEpsilonTestCases;
+
 static TransitiveSetTestCases transitiveSetTestCases;
 
 static void PopulateWithTransitiveClosureTestCases()
@@ -181,6 +191,39 @@ static void PopulateWithTransitiveClosureTestCases()
 	};
 }
 
+static ClosureEpsilonTestCases closureEpsilonTestCases;
+
+static void PopulateWithClosureEpsilonTestCases()
+{
+	closureEpsilonTestCases = {
+		{
+			{  // 1-->(2, 5) ; 2-->(3, 10) ; 3-->(4, 20) the input
+				{ 1, {
+					{ 2, 5 } }
+				},
+				{ 2, {
+					{ 3, 10 } }
+				},
+				{ 3, {
+					{ 4, 20 } }
+				},
+			},
+			{  // 1-->(2, 5) 1-->(3, 15) 1-->(4, 35) ; 2-->(3, 10) 2-->(4, 30) ; 3-->(4, 20) the desired output
+				{ 1, {
+					{ 2, 5 }, { 3, 15 }, { 4, 35 } }
+				},
+				{ 2, {
+					{ 3, 10 }, { 4, 30 } }
+				},
+				{ 3, {
+					{ 4, 20 } }
+				},
+			},
+			false
+		},
+	};
+}
+
 static TransitiveSetTestCases addIdentityTestCases;
 
 static void PopulateWithAddIdentityTestCases()
@@ -297,6 +340,54 @@ void RunTransitiveClosureTests()
 	else
 	{
 		std::cout << "Passed all " << transitiveSetTestCases.size() << " tests.\n";
+	}
+}
+
+void RunCloseEpsilonTests()
+{
+	PopulateWithClosureEpsilonTestCases();
+
+	auto failedTests = 0;
+	std::cout << "RUNNING TESTS WITH " << transitiveSetTestCases.size() << " CLOSURE EPSILON TESTS:\n";
+	for (size_t i = 0, bound = closureEpsilonTestCases.size(); i < bound; ++i)
+	{
+		std::cout << "\t" << i << ": ";
+		const auto& inputSet = closureEpsilonTestCases[i].input;
+		const auto& outputSet = closureEpsilonTestCases[i].output;
+
+		auto inputSetClosed = closureEpsilonTestCases[i].input;
+
+		bool infinite;
+		ClosureEpsilon(inputSetClosed, infinite);
+
+		const auto expectedInf = closureEpsilonTestCases[i].inf;
+
+		if (infinite ||
+			(inputSetClosed == outputSet && infinite == expectedInf))
+		{
+			std::cout << "passed\n";
+		}
+		else
+		{
+			std::cout << "failed!\n"
+				<< "Exprected the closed epsilon of:\n";
+			Print(outputSet);
+			std::cout << "To be equal to the set:\n";
+			Print(inputSetClosed);
+			std::cout << "The expectd infinite was " << (expectedInf ? "true" : "false")
+				<< "and the evaluated one is " << (infinite ? "true" : "false") << ".\n";
+			++failedTests;
+		}
+	}
+
+	if (failedTests > 0)
+	{
+		std::cout << "Passed " << closureEpsilonTestCases.size() - failedTests << " tests.\n";
+		std::cout << "Failed " << failedTests << " tests.\n";
+	}
+	else
+	{
+		std::cout << "Passed all " << closureEpsilonTestCases.size() << " tests.\n";
 	}
 }
 

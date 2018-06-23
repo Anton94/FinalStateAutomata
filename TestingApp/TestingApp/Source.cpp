@@ -35,9 +35,11 @@ int main(int argc, char *argv[])
 {
 	ProcessCommandLineArguments(argc, argv);
 	//RunInputValidationTests();
-	//RunFinalStateTransducerTests();
+
+	RunFinalStateTransducerTests();
 	RunTransitiveClosureTests();
 	RunAddIdentityTests();
+	RunCloseEpsilonTests();
 
 	//RegularFinalStateTransducerBuilder builder(regExpr);
 	//FinalStateTransducer* tr = builder.GetBuildedTransducer();

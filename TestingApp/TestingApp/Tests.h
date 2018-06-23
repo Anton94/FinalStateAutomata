@@ -4,3 +4,4 @@ void RunInputValidationTests();
 void RunFinalStateTransducerTests();
 void RunTransitiveClosureTests();
 void RunAddIdentityTests();
+void RunCloseEpsilonTests();

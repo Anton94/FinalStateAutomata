@@ -119,3 +119,19 @@ void Print(const SetOfTransitions& r)
 		std::cout << "}\n";
 	}
 }
+
+void Print(const SetOfTransitionsWithOutputs& r)
+{
+	for (const auto& transitionAndDestinations : r)
+	{
+		const auto& transition = transitionAndDestinations.first;
+		const auto& destinations = transitionAndDestinations.second;
+
+		std::cout << "\t{ " << transition << " - ";
+		for (const auto& destination : destinations)
+		{
+			std::cout << "(" << destination.state << ", " << destination.output << ") ";
+		}
+		std::cout << "}\n";
+	}
+}
