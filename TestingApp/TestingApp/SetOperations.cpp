@@ -4,48 +4,61 @@
 
 void TransitiveClosure(SetOfTransitions& r)
 {
+	/*
+		I will devide them into blocks of processing transitions.
+		First devided by the first transition state('a'); second on the level of "connection"
+	*/
 	auto cR = r; // {<a, [b]>}, an map of states 'a' and their destinations, i.e. a set of b's ([b])
 
-	bool rHasChanged;
-	do
+	for (auto& destinations : cR) // @destinations is a pair <a, [b]> for which the array [b] is all 'b', such that (a, b) belongs to 'cR'
 	{
-		rHasChanged = false;
-		// TODO: check for iterator invalidations!!!(should be fine)
-		for (auto& destinations : cR) // @destinations is a pair <a, [b]> for which the array [b] is all 'b', such that (a, b) belongs to 'cR'
+		std::unordered_set<size_t> currentlyProccessingDestinations = destinations.second;
+
+		while (currentlyProccessingDestinations.size() > 0)
 		{
-			const auto& a = destinations.first;
-			const auto destinationsSize = destinations.second.size();
-			const auto dests = destinations.second; // to avoid the iterator invalidation because I will insert elements in it
-			for (auto b : dests)
+			std::unordered_set<size_t> newDestinations;
+			for (auto b : currentlyProccessingDestinations)
 			{
 				const auto it = r.find(b); // it is a pair <b, [c]> for which the array [c] is all 'c', such that (b, c) belongs to 'r'
 				if (it != r.end())
 				{
-					destinations.second.insert(it->second.begin(), it->second.end()); // add all (a, c) to 'cR' such that c belongs to [c]
+					bool hasNewDestinationNotInAlreadyProcessed = false;
+
+					// Add only the new once, skip the already added!
+					for (const auto& destination : it->second)
+					{
+						if (destinations.second.find(destination) == destinations.second.end())
+						{
+							newDestinations.insert(destination);
+							hasNewDestinationNotInAlreadyProcessed = true;
+						}
+					}
 				}
 			}
 
-			if (destinationsSize != destinations.second.size())
-			{
-				rHasChanged = true;
-			}
+			// Add the currently processed elements to the destinations of 'a'
+			destinations.second.insert(
+				std::make_move_iterator(currentlyProccessingDestinations.begin()),
+				std::make_move_iterator(currentlyProccessingDestinations.end()));
+			// Process the newly added elements (so if they are connected to other states they will be added to the destinations of 'a'
+			currentlyProccessingDestinations = std::move(newDestinations);
 		}
-	} while (rHasChanged);
+	}
 
 	r = std::move(cR);
 }
 
-void AddIdentity(SetOfTransitions& R)
+void AddIdentity(SetOfTransitions& r)
 {
-	for (auto& transitions : R)
+	for (auto& transitions : r)
 	{
 		transitions.second.insert(transitions.first);
 	}
 }
 
-void Print(const SetOfTransitions& R)
+void Print(const SetOfTransitions& r)
 {
-	for (const auto& transitionAndDestinations : R)
+	for (const auto& transitionAndDestinations : r)
 	{
 		const auto& transition = transitionAndDestinations.first;
 		const auto& destinations = transitionAndDestinations.second;
