@@ -20,6 +20,7 @@ struct Transition
 	}
 };
 
+// TODO use it directly!
 template<> struct std::hash<Transition>
 {
 	typedef Transition argument_type;

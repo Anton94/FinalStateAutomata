@@ -69,15 +69,20 @@ void ClosureEpsilon(SetOfTransitionsWithOutputs& r, bool& infinite)
 					// Add only the new once, skip the already added!
 					for (const auto& destination : it->second)
 					{
-						if (destination.state == a && destination.output > 0)
+						const auto& destinationWithUpdatedOutput = Transition{ destination.state, destination.output + bAndO.output };
+						if (destinationWithUpdatedOutput.state == a && destinationWithUpdatedOutput.output > 0)
 						{
 							infinite = true;
 							return;
 						}
 
-						if (destinations.second.find(destination) == destinations.second.end())
+						if (std::find_if(destinations.second.begin(),
+							destinations.second.end(),
+							[&destinationWithUpdatedOutput](const Transition& o) { return destinationWithUpdatedOutput.state == o.state; }
+										)== destinations.second.end()
+							)
 						{
-							newDestinations.insert(Transition { destination.state, destination.output + bAndO.output});
+							newDestinations.insert(destinationWithUpdatedOutput);
 						}
 					}
 				}
