@@ -36,7 +36,7 @@ public:
 
 	void MakeSingleInitialState(size_t newInitialStateIndex);
 
-	// Only on a real-time transducer.
+	// Works only for one-symbol transducer(the transitions are only with one symbol or epsilon)
 	bool TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
 
 	bool GetRecognizingEmptyWord() const;
@@ -50,6 +50,10 @@ public:
 private:
 	// Each transition to be with only single symbol(or epsilon)
 	void Expand();
+
+	// Removes the states which are not connected to the a initial state or a final state.
+	void Trim();
+	void FinalStateTransducer::Proj1_2(SetOfTransitions& r) const;
 
 	// (e,0) transitions removing
 	void RemoveEpsilon();

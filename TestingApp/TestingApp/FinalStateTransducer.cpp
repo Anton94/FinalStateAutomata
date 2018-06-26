@@ -389,6 +389,150 @@ void FinalStateTransducer::MakeRealTime(bool& infinite)
 	RealTime = !infinite; // If it is not an infinite then the conversion to real-time transducer was successful
 }
 
+// Removes the states which are not connected to the a initial state or a final state.
+void FinalStateTransducer::Trim()
+{
+	// TODO: optimizations at few places
+	SetOfTransitions r;
+	Proj1_2(r);
+	TransitiveClosure(r);
+
+	std::unordered_set<size_t> reachableStates;
+	// Add the initial states.
+	for (const auto& initialStateIndex : InitialStates)
+	{
+		reachableStates.insert(initialStateIndex);
+	}
+
+	// Remove all states which are not connected to an initial one.
+	for (const auto& initialStateIndex : InitialStates)
+	{
+		auto it = r.find(initialStateIndex);
+		if (it != r.end())
+		{
+			for (const auto& reachableState : it->second)
+			{
+				reachableStates.insert(reachableState);
+			}
+		}
+	}
+
+	std::unordered_set<size_t> coReachableStates;
+	// Add the final states.
+	for (const auto& finalStateIndex : FinalStates)
+	{
+		coReachableStates.insert(finalStateIndex);
+	}
+
+	// Remove all states which are not connected to a final one.
+	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	{
+		auto it = r.find(i);
+		if (it != r.end())
+		{
+			for (const auto& finalStateIndex : FinalStates)
+			{
+				auto ifFinal = it->second.find(finalStateIndex);
+				if (ifFinal != it->second.end())
+				{
+					coReachableStates.insert(i);
+					break;
+				}
+			}
+		}
+	}
+
+	// Remove the non reachable or co-reachabe state transitions.
+	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	{
+		if (reachableStates.find(i) == reachableStates.end() || coReachableStates.find(i) == coReachableStates.end())
+		{
+			Delta[i].clear();
+		}
+	}
+
+	// Update the Initial and Final states.
+	for (const auto& initialStateIndex : InitialStates)
+	{
+		if (coReachableStates.find(initialStateIndex) == coReachableStates.end())
+		{
+			InitialStates.erase(initialStateIndex);
+		}
+	}
+	for (const auto& finalStateIndex : FinalStates)
+	{
+		if (reachableStates.find(finalStateIndex) == reachableStates.end())
+		{
+			FinalStates.erase(finalStateIndex);
+		}
+	}
+
+	// Remove the deleted states from the vector and remap the transitions
+	const size_t REMOVED_STATE = size_t(-1);
+
+	std::unordered_map<size_t, size_t> remapingOfStateIndexes;
+	size_t newStateIndex = 0;
+	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	{
+		if (Delta[i].empty())
+		{
+			remapingOfStateIndexes[i] = REMOVED_STATE;
+		}
+		else
+		{
+			remapingOfStateIndexes[i] = newStateIndex;
+			++newStateIndex;
+		}
+	}
+
+	// "Squash" the elements in the vector.
+	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	{
+		const auto& newStateIndex = remapingOfStateIndexes[i];
+		if (newStateIndex != REMOVED_STATE)
+		{
+			Delta[newStateIndex] = std::move(Delta[i]);
+		}
+	}
+
+	// Now the @newStateIndex is the new vector size.
+	Delta.resize(newStateIndex);
+
+	std::unordered_set<Transition> updatedTransitions;
+	// Update the transitions.
+	for (auto& state : Delta)
+	{
+		for (auto& transitionsWithWord : state)
+		{
+			updatedTransitions.clear();
+			for (const auto& transition : transitionsWithWord.second)
+			{
+				const auto& newDestinationStateIndex = remapingOfStateIndexes[transition.state];
+				if (newDestinationStateIndex != REMOVED_STATE)
+				{
+					updatedTransitions.insert(Transition{ newDestinationStateIndex, transition.output });
+				}
+			}
+			transitionsWithWord.second = std::move(updatedTransitions);
+		}
+	}
+}
+
+void FinalStateTransducer::Proj1_2(SetOfTransitions& r) const
+{
+	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	{
+		for (const auto& transitions : Delta[i])
+		{
+			for (const auto& transition : transitions.second)
+			{
+
+				r[i].insert(transition.state);
+			}
+		}
+	}
+}
+
 void FinalStateTransducer::UpdateRecognizingEmptyWord()
 {
 	RecognizingEmptyWord = RealTime ?
