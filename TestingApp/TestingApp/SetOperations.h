@@ -40,7 +40,7 @@ void TransitiveClosure(SetOfTransitions& r);
 // Additionaly infinity checking, i.e.
 // if there is a cycle of type (a, <b, o>) ---> (b, <c, o'>) ---> ... ---> (z, <a, o'">)
 // and the sum of all o, o', ... , o'" is not 0 then it is a non-trivial one, there could be infinite many outputs.
-void ClosureEpsilon(SetOfTransitionsWithOutputs& r, bool& infinite);
+void ClosureEpsilon(SetOfTransitionsWithOutputs& r, bool& infinite, std::unordered_set<size_t>& statesWithEpsilonCycleWithPositiveOutput);
 
 void AddIdentity(SetOfTransitions& r);
 void AddIdentity(SetOfTransitionsWithOutputs& r, size_t numberOfStates);

@@ -45,8 +45,10 @@ void TransitiveClosure(SetOfTransitions& r)
 	r = std::move(cR);
 }
 
-void ClosureEpsilon(SetOfTransitionsWithOutputs& r, bool& infinite)
+void ClosureEpsilon(SetOfTransitionsWithOutputs& r, bool& infinite, std::unordered_set<size_t>& statesWithEpsilonCycleWithPositiveOutput)
 {
+	statesWithEpsilonCycleWithPositiveOutput.clear();
+	infinite = false;
 	/*
 	I will devide them into blocks of processing transitions.
 	First devided by the first transition state('a'); second on the level of "connection" (number of states to go through to get to the 'one')
@@ -73,13 +75,12 @@ void ClosureEpsilon(SetOfTransitionsWithOutputs& r, bool& infinite)
 						if (destinationWithUpdatedOutput.state == a && destinationWithUpdatedOutput.output > 0)
 						{
 							infinite = true;
-							return;
+							statesWithEpsilonCycleWithPositiveOutput.insert(a);
 						}
-
-						if (std::find_if(destinations.second.begin(),
+						else if (std::find_if(destinations.second.begin(),
 							destinations.second.end(),
 							[&destinationWithUpdatedOutput](const Transition& o) { return destinationWithUpdatedOutput.state == o.state; }
-										)== destinations.second.end()
+										) == destinations.second.end()
 							)
 						{
 							newDestinations.insert(destinationWithUpdatedOutput);
@@ -96,9 +97,7 @@ void ClosureEpsilon(SetOfTransitionsWithOutputs& r, bool& infinite)
 			currentlyProcessingDestinations = std::move(newDestinations);
 		}
 	}
-
 	r = std::move(cR);
-	infinite = false;
 }
 
 void AddIdentity(SetOfTransitions& r)

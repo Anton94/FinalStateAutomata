@@ -280,8 +280,9 @@ void FinalStateTransducer::RemoveEpsilon()
 void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 {
 	InitialEpsilonOutputs.clear();
+	CloseEpsilonOnStates.clear();
 
-	SetOfTransitionsWithOutputs Ce;
+	SetOfTransitionsWithOutputs& Ce = CloseEpsilonOnStates;
 	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
 	{
 		auto& state = Delta[i];
@@ -296,7 +297,7 @@ void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 		}
 	}
 
-	ClosureEpsilon(Ce, infinite);
+	ClosureEpsilon(Ce, infinite, StatesWithEpsilonCycleWithPositiveOutput);
 	if (infinite)
 	{
 		return;
@@ -405,13 +406,13 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 
 bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
 {
-	assert(false);
 	if (!word) return false;
 	const char* pWord = word;
 #if defined(INFO)
 	std::cout << "Standard Traversing with \"" << pWord << "\" word...\n";
 #endif
 
+	outputs.clear();
 	char strTmp[] = "x";
 
 	struct TraverseTransition
@@ -441,9 +442,6 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 
 		if (q.empty())
 		{
-#if defined(INFO)
-			std::cout << "\tThe word is not from this regular expression.\n";
-#endif
 			return false;
 		}
 		assert(currTransition.state == -1); // Only the level separator can have negative state's index.
@@ -458,6 +456,15 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 		{
 			currTransition = q.front();
 			q.pop_front();
+#if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
+			if (StatesWithEpsilonCycleWithPositiveOutput.find(currTransition.state) != StatesWithEpsilonCycleWithPositiveOutput.end())
+			{
+#if defined(INFO)
+				std::cout << "The word was with infinite ambiguous\n";
+#endif
+				return false;
+			}
+#endif
 
 			// If the state has a transition with the symbol *word, then add it
 			//TODO remove the "hack"
@@ -511,6 +518,15 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 	while (!q.empty())
 	{
 		const auto& currTransition = q.front();
+#if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
+		if (StatesWithEpsilonCycleWithPositiveOutput.find(currTransition.state) != StatesWithEpsilonCycleWithPositiveOutput.end())
+		{
+#if defined(INFO)
+			std::cout << "The word was with infinite ambiguous\n";
+#endif
+			return false;
+		}
+#endif
 		if (FinalStates.find(currTransition.state) != FinalStates.end())
 		{
 			accumulatedOutputs.insert(currTransition.accumulatedOutput);
@@ -536,29 +552,18 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 
 		q.pop_front();
 	}
-	//if (!*word && RecognizingEmptyWord) // The input word was ""
-	//{
-	//	accumulatedOutputs.insert(0);
-	//}
 
-	outputs = std::move(accumulatedOutputs);
-
-	if (outputs.empty())
+	if (!*word && RecognizingEmptyWord)
 	{
-#if defined(INFO)
-		std::cout << "\tThe word is not from this regular expression.\n";
-#endif
-		return false;
+		outputs = std::move(InitialEpsilonOutputs);
+		outputs.insert(0);
+	}
+	else
+	{
+		outputs = std::move(accumulatedOutputs);
 	}
 
-#if defined(INFO)
-	std::cout << "END traversing.\n";
-	for (const auto& output : outputs)
-	{
-		std::cout << "\tAn output: " << output << ".\n";
-	}
-#endif
-	return true;
+	return !outputs.empty();
 }
 
 bool FinalStateTransducer::RealTimeTraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
@@ -625,8 +630,6 @@ bool FinalStateTransducer::RealTimeTraverseWithWord(const char* word, std::unord
 	assert(q.front().state == -1);
 	q.pop_front(); // Remove the level separator.
 
-
-
 	std::unordered_set<size_t> accumulatedOutputs;
 	while (!q.empty())
 	{
@@ -681,32 +684,22 @@ bool FinalStateTransducer::RealTimeIsRecognizingEmptyWord() const
 // Note if it is infinite ambiguous for the empty word then it will return false.
 bool FinalStateTransducer::StandardIsRecognizingEmptyWord() const
 {
-	// TODO I do not need the outputs.
-	SetOfTransitionsWithOutputs Ce;
-	for (const auto initialState : InitialStates)
-	{
-		auto& state = Delta[initialState];
-
-		auto it = state.find("");
-		if (it != state.end())
-		{
-			Ce[initialState].insert(it->second.begin(), it->second.end());
-		}
-	}
-	bool infinite;
-	ClosureEpsilon(Ce, infinite);
-	if (infinite)
+	if (IsInfinite())
 	{
 		return false;
 	}
 
 	for (const auto& initialState : InitialStates)
 	{
-		for (const auto transition : Ce[initialState])
+		auto it = CloseEpsilonOnStates.find(initialState);
+		if (it != CloseEpsilonOnStates.end())
 		{
-			if (FinalStates.find(transition.state) != FinalStates.end())
+			for (const auto transition : it->second)
 			{
-				return true;
+				if (FinalStates.find(transition.state) != FinalStates.end())
+				{
+					return true;
+				}
 			}
 		}
 	}

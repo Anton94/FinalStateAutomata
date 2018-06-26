@@ -74,6 +74,8 @@ private: // TODO: the key has to be something else, not a whole string!
 	bool Infinite;
 	bool RealTime;
 
+	SetOfTransitionsWithOutputs CloseEpsilonOnStates;
+	std::unordered_set<size_t> StatesWithEpsilonCycleWithPositiveOutput;
 	std::unordered_set<size_t> InitialEpsilonOutputs;
 private: // I do not want to copy this big structures, just to move them arround...
 	//FinalStateTransducer(const FinalStateTransducer& other) = delete; // TODO Whyyyy not able....
