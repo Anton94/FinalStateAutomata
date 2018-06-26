@@ -705,6 +705,182 @@ static void PopulateWithTestCases()
 			{ "xs", {} },
 		}
 	});
+	FSTTestcases.push_back({
+		"a:5 :0 | *",
+		false,
+		false,
+		{
+			{ "", { 0 } },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "a", { 5 } },
+			{ "aa", { 10 } },
+			{ "aaa", { 15 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":10 a:5 | *",
+		true,
+		false,
+		{
+			{ "", {} },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "a", {} },
+			{ "aa", {} },
+			{ "aaa", {} },
+		}
+	});
+	FSTTestcases.push_back({
+		":10 a:5 . *",
+		false,
+		false,
+		{
+			{ "", { 0 } },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "a", { 15 } },
+			{ "aa", { 30 } },
+			{ "aaa", { 45 } },
+		}
+	});
+	FSTTestcases.push_back({
+		"a:5 :10 * . b:6 |",
+		true,
+		false,
+		{
+			{ "", {} },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "a", {} },
+			{ "aa", {} },
+			{ "aaa", {} },
+			{ "bb", {} },
+			{ "b", { 6 } },
+		}
+	});
+	FSTTestcases.push_back({
+		"a:5 :10 * . b:6 .",
+		true,
+		false,
+		{
+			{ "", {} },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "a", {} },
+			{ "aa", {} },
+			{ "ab",{} },
+			{ "aaa", {} },
+			{ "bb", {} },
+			{ "b", {} },
+		}
+	});
+	FSTTestcases.push_back({
+		"a:5 :10 * . b:6 * |",
+		true,
+		false,
+		{
+			{ "", { 0 } },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "a", {} },
+			{ "aa", {} },
+			{ "ab",{} },
+			{ "aaa", {} },
+			{ "bb", {} },
+			{ "abb", {} },
+			{ "abba", {} },
+			{ "bba", {} },
+			{ "b", { 6 } },
+			{ "bb", { 12 } },
+			{ "bbb", { 18 } },
+		}
+	});
+	FSTTestcases.push_back({
+		"a:5 :10 * .  abcd:6 * |",
+		true,
+		false,
+		{
+			{ "", { 0 } },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "a", {} },
+			{ "aa", {} },
+			{ "aabcd",{} },
+			{ "aaa", {} },
+			{ "abcdabcd", {} },
+			{ "aabcdabcd", {} },
+			{ "aabcdabcda", {} },
+			{ "bba", {} },
+			{ "abcd", {} },
+			{ "abcdabcd", {} },
+			{ "abcdabcdabcd", {} },
+		}
+	});
+	FSTTestcases.push_back({
+		"a:5 :10 * .  bcd:6 * |",
+		true,
+		false,
+		{
+			{ "", { 0 } },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "a", {} },
+			{ "aa", {} },
+			{ "abcdd",{} },
+			{ "aaa", {} },
+			{ "abcdabcd", {} },
+			{ "aabcdabcd", {} },
+			{ "aabcdabcda", {} },
+			{ "bba", {} },
+			{ "bcd", { 6 } },
+			{ "bcdbcd", { 12 } },
+			{ "bcdbcdbcd", { 18 } },
+		}
+	});
+	FSTTestcases.push_back({
+		"a:5 :10 * .  bcd:6 * | tony:11 .",
+		true,
+		false,
+		{
+			{ "", {} },
+			{ "a", {} },
+			{ "aa", {} },
+			{ "abcdd",{} },
+			{ "aaa", {} },
+			{ "abcdabcd", {} },
+			{ "aabcdabcd", {} },
+			{ "aabcdabcda", {} },
+			{ "bba", {} },
+			{ "atony", {} },
+			{ "aatony", {} },
+			{ "abcddtony",{} },
+			{ "aaatony", {} },
+			{ "abcdabcdtony", {} },
+			{ "aabcdabcdtony", {} },
+			{ "aabcdabcdatony", {} },
+			{ "bbatony", {} },
+			{ "bcdtony", { 17 } },
+			{ "bcdbcdtony", { 23 } },
+			{ "bcdbcdbcdtony", { 29 } },
+		}
+	});
 }
 
 
@@ -713,8 +889,8 @@ void RunFinalStateTransducerTests()
 {
 	PopulateWithTestCases();
 
-	auto failedTests = 0;
-	auto testCases = 0;
+	size_t failedTests = 0;
+	size_t testCases = 0;
 	std::cout << "RUNNING TESTS WITH " << FSTTestcases.size() << " REG EXPRS:\n";
 	for (const auto& testCase : FSTTestcases)
 	{
@@ -736,7 +912,7 @@ void RunFinalStateTransducerTests()
 			++failedTests;
 		}
 
-		int testNumber = 0;
+		size_t testNumber = 0;
 		testCases += testCase.wordsAndExpectedOutputs.size();
 		for (const auto& wordAndOutputs : testCase.wordsAndExpectedOutputs)
 		{
