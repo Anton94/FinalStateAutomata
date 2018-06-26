@@ -274,12 +274,12 @@ void FinalStateTransducer::RemoveEpsilon()
 		newInitialStates.insert(Ce[initialStateIndex].begin(), Ce[initialStateIndex].end());
 	}
 	InitialStates = std::move(newInitialStates);
-
-	//RecognizingEmptyWord = HasInitialStateWhichIsFinal();
 }
 
 void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 {
+	InitialEpsilonOutputs.clear();
+
 	SetOfTransitionsWithOutputs Ce;
 	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
 	{
@@ -533,6 +533,15 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 	return true;
 }
 
+void FinalStateTransducer::UpdateRecognizingEmptyWord()
+{
+	RecognizingEmptyWord = HasInitialStateWhichIsFinal();
+}
+
+bool FinalStateTransducer::GetRecognizingEmptyWord() const
+{
+	return RecognizingEmptyWord;
+}
 
 bool FinalStateTransducer::HasInitialStateWhichIsFinal() const
 {

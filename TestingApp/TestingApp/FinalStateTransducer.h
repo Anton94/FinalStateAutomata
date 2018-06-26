@@ -47,6 +47,8 @@ public:
 	// Only on a real-time transducer.
 	bool TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
 
+	void UpdateRecognizingEmptyWord();
+	bool GetRecognizingEmptyWord() const;
 private:
 	bool HasInitialStateWhichIsFinal() const;
 private: // TODO: the key has to be something else, not a whole string!
