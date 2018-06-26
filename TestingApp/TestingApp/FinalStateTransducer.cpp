@@ -82,14 +82,14 @@ void FinalStateTransducer::Union(FinalStateTransducer& right)
 }
 
 
-void FinalStateTransducer::Remap(int offset)
+void FinalStateTransducer::Remap(size_t offset)
 {
 	RemapDelta(offset);
 	RemapInitialStates(offset);
 	RemapFinalStates(offset);
 }
 
-void FinalStateTransducer::RemapDelta(int offset)
+void FinalStateTransducer::RemapDelta(size_t offset)
 {
 	// I do not need this explicit remaping. TODO keep the offset 'per state' and recalculate "on the fly"?
 	for (auto& state : Delta)
@@ -106,7 +106,7 @@ void FinalStateTransducer::RemapDelta(int offset)
 	}
 }
 
-void FinalStateTransducer::RemapInitialStates(int offset)
+void FinalStateTransducer::RemapInitialStates(size_t offset)
 {
 	std::unordered_set<size_t> newInitialStates;
 	for (auto& stateIndex : InitialStates)
@@ -116,7 +116,7 @@ void FinalStateTransducer::RemapInitialStates(int offset)
 	InitialStates = std::move(newInitialStates);
 }
 
-void FinalStateTransducer::RemapFinalStates(int offset)
+void FinalStateTransducer::RemapFinalStates(size_t offset)
 {
 	std::unordered_set<size_t> newFinalStates;
 	for (auto& stateIndex : FinalStates)
@@ -126,7 +126,7 @@ void FinalStateTransducer::RemapFinalStates(int offset)
 	FinalStates = std::move(newFinalStates);
 }
 
-void FinalStateTransducer::MoveRightInitialStatesIntoLeft(FinalStateTransducer& right, int offset)
+void FinalStateTransducer::MoveRightInitialStatesIntoLeft(FinalStateTransducer& right, size_t offset)
 {
 	for (auto& intialStateIndex : right.InitialStates)
 	{
@@ -134,7 +134,7 @@ void FinalStateTransducer::MoveRightInitialStatesIntoLeft(FinalStateTransducer& 
 	}
 }
 
-void FinalStateTransducer::MoveRightFinalStatesIntoLeft(FinalStateTransducer& right, int offset)
+void FinalStateTransducer::MoveRightFinalStatesIntoLeft(FinalStateTransducer& right, size_t offset)
 {
 	for (auto& finalStateIndex : right.FinalStates)
 	{
@@ -142,7 +142,7 @@ void FinalStateTransducer::MoveRightFinalStatesIntoLeft(FinalStateTransducer& ri
 	}
 }
 
-void FinalStateTransducer::MakeSingleInitialState(int newInitialStateIndex)
+void FinalStateTransducer::MakeSingleInitialState(size_t newInitialStateIndex)
 {
 	for (const auto& initialStateIndex : InitialStates)
 	{
@@ -290,10 +290,7 @@ void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 		auto it = state.find("");
 		if (it != state.end())
 		{
-			Ce[i].insert(
-				std::make_move_iterator(it->second.begin()),
-				std::make_move_iterator(it->second.end()));
-			Delta[i].erase(it); // Remove the epsilon transition (@it)
+			Ce[i].insert(it->second.begin(), it->second.end());
 		}
 	}
 
@@ -301,6 +298,12 @@ void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 	if (infinite)
 	{
 		return;
+	}
+
+	// Remove the epsilon transitions
+	for (auto& state : Delta)
+	{
+		state.erase("");
 	}
 
 	AddIdentity(Ce, Delta.size());

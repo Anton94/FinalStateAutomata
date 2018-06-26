@@ -26,15 +26,15 @@ public:
 	void Concat(FinalStateTransducer& right);
 	void Union(FinalStateTransducer& right);
 
-	void Remap(int offset);
-	void RemapDelta(int offset);
-	void RemapInitialStates(int offset);
-	void RemapFinalStates(int offset);
+	void Remap(size_t offset);
+	void RemapDelta(size_t offset);
+	void RemapInitialStates(size_t offset);
+	void RemapFinalStates(size_t offset);
 
-	void MoveRightInitialStatesIntoLeft(FinalStateTransducer& right, int offset);
-	void MoveRightFinalStatesIntoLeft(FinalStateTransducer& right, int offset);
+	void MoveRightInitialStatesIntoLeft(FinalStateTransducer& right, size_t offset);
+	void MoveRightFinalStatesIntoLeft(FinalStateTransducer& right, size_t offset);
 
-	void MakeSingleInitialState(int newInitialStateIndex);
+	void MakeSingleInitialState(size_t newInitialStateIndex);
 
 	// Only on a real-time transducer.
 	bool TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
