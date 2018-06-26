@@ -19,7 +19,7 @@ FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int len
 	// Creating a transducer which accepts only the given word.
 	Delta.resize(2);
 
-	Delta[0][word].push_back(Transition{ 1, outputNumber }); // One transition: 0 -> 1 via word @word and output @outputNumber.
+	Delta[0][word].insert(Transition{ 1, outputNumber }); // One transition: 0 -> 1 via word @word and output @outputNumber.
 	FinalStates.insert(1); // 1 is a final state.
 	InitialStates.insert(0); // q0 which is 0 is the initial state
 
@@ -41,7 +41,7 @@ void FinalStateTransducer::ClosePlus()
 
 	for (const auto& finalStateIndex : FinalStates)
 	{
-		Delta[finalStateIndex][""].push_back(Transition{ newStateIndex, 0 }); // Add "finalState --e:0--> newState" transition
+		Delta[finalStateIndex][""].insert(Transition{ newStateIndex, 0 }); // Add "finalState --e:0--> newState" transition
 	}
 
 	MakeSingleInitialState(newStateIndex);
@@ -59,7 +59,7 @@ void FinalStateTransducer::Concat(FinalStateTransducer& right)
 	{
 		for (auto& rightInitialStateIndex : right.InitialStates)
 		{
-			Delta[leftFinalStateIndex][""].push_back(Transition{ rightInitialStateIndex, 0 });
+			Delta[leftFinalStateIndex][""].insert(Transition{ rightInitialStateIndex, 0 });
 		}
 	}
 
@@ -95,10 +95,12 @@ void FinalStateTransducer::RemapDelta(int offset)
 	{
 		for (auto& transitions : state)
 		{
-			for (auto& transition : transitions.second)
+			std::unordered_set<Transition> remapedTransitions;
+			for (const auto& transition : transitions.second)
 			{
-				transition.state += offset;
+				remapedTransitions.insert(Transition { transition.state + offset, transition.output });
 			}
+			transitions.second = std::move(remapedTransitions);
 		}
 	}
 }
@@ -110,7 +112,7 @@ void FinalStateTransducer::RemapInitialStates(int offset)
 	{
 		newInitialStates.insert(stateIndex + offset);
 	}
-	InitialStates.swap(newInitialStates);
+	InitialStates = std::move(newInitialStates);
 }
 
 void FinalStateTransducer::RemapFinalStates(int offset)
@@ -120,7 +122,7 @@ void FinalStateTransducer::RemapFinalStates(int offset)
 	{
 		newFinalStates.insert(stateIndex + offset);
 	}
-	FinalStates.swap(newFinalStates);
+	FinalStates = std::move(newFinalStates);
 }
 
 void FinalStateTransducer::MoveRightInitialStatesIntoLeft(FinalStateTransducer& right, int offset)
@@ -143,7 +145,7 @@ void FinalStateTransducer::MakeSingleInitialState(int newInitialStateIndex)
 {
 	for (const auto& initialStateIndex : InitialStates)
 	{
-		Delta[newInitialStateIndex][""].push_back(Transition{ initialStateIndex, 0 }); // Add "newState --e:0--> initialState" transition
+		Delta[newInitialStateIndex][""].insert(Transition{ initialStateIndex, 0 }); // Add "newState --e:0--> initialState" transition
 	}
 
 	// Make the new state to be the initial one.
@@ -179,18 +181,18 @@ void FinalStateTransducer::Expand()
 					// q --word[0]--> <r00, out0>
 					const char* pWord = transitionWord.c_str();
 					tmpWord[0] = *pWord++;
-					transitionsExpanded[tmpWord].push_back(Transition{ newStateIndex, transitionDestination.output });
+					transitionsExpanded[tmpWord].insert(Transition{ newStateIndex, transitionDestination.output });
 
 					for (auto bound = currStatesCount + newStatesCount - 1; newStateIndex < bound; ++newStateIndex)
 					{
 						assert(*pWord);
 						tmpWord[0] = *pWord++;
-						Delta[newStateIndex][tmpWord].push_back(Transition{ newStateIndex + 1, 0 }); // rk --word[k]--> <rk+1, 0>
+						Delta[newStateIndex][tmpWord].insert(Transition{ newStateIndex + 1, 0 }); // rk --word[k]--> <rk+1, 0>
 					}
 
 					assert(*pWord);
 					tmpWord[0] = *pWord++;
-					Delta[newStateIndex][tmpWord].push_back(Transition{ transitionDestination.state, 0 });
+					Delta[newStateIndex][tmpWord].insert(Transition{ transitionDestination.state, 0 });
 				}
 
 			}
@@ -205,28 +207,21 @@ void FinalStateTransducer::Expand()
 }
 
 // Separates the epsilon transitions in @v (those with @output 0) to the set @s
-void SeparateEpsilonTransitions(std::vector<Transition>& v, size_t output, std::unordered_set<size_t>& s)
+void SeparateEpsilonTransitions(std::unordered_set<Transition>& v, size_t output, std::unordered_set<size_t>& s)
 {
-	int last = v.size() - 1;
-	int curr = 0;
-	while (curr <= last)
+	auto it = v.begin();
+	while (it != v.end())
 	{
-		auto& currTransition = v[curr];
-
-		if (currTransition.output == output)
+		if (it->output == 0)
 		{
-			s.insert(currTransition.state);
-			// Move the last element to it's place and next time check it.
-			currTransition = v[last];
-			--last;
+			s.insert(it->state);
+			it = v.erase(it);
 		}
 		else
 		{
-			++curr;
+			++it;
 		}
 	}
-
-	v.resize(last + 1); // TODO: better way for removing them.
 }
 
 void FinalStateTransducer::RemoveEpsilon()
@@ -266,14 +261,7 @@ void FinalStateTransducer::RemoveEpsilon()
 				{
 					auto t = Transition{ newDest, transition.output };
 
-					// TODO Remove; there is no case(AFAIK) in which they can duplicate
-					for (auto& tr : transitionWordAndDestinations.second)
-					{
-						if (tr.state == t.state && tr.output == t.output)
-							assert(false);
-					}
-					// END
-					transitionWordAndDestinations.second.push_back(std::move(t));
+					transitionWordAndDestinations.second.insert(std::move(t));
 				}
 			}
 		}

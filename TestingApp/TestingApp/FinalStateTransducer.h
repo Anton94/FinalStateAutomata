@@ -38,6 +38,7 @@ public:
 
 	void Expand(); // Each transition to be with only single symbol(or epsilon)
 
+	// (e,0) transitions removing
 	void RemoveEpsilon();
 
 	// Only on a real-time transducer.
@@ -46,7 +47,7 @@ public:
 private:
 	bool HasInitialStateWhichIsFinal() const;
 private: // TODO: the key has to be something else, not a whole string!
-	typedef std::unordered_map<std::string, std::vector<Transition>>
+	typedef std::unordered_map<std::string, std::unordered_set<Transition>>
 		StateTransitions;
 	typedef std::vector<StateTransitions> DeltaType;
 	DeltaType Delta; // State at position 'i' with word 'w' will lead to state(s) ('state') (which are indexes in the Delta vector) with output ('output') some number.
