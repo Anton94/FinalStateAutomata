@@ -278,6 +278,102 @@ void FinalStateTransducer::RemoveEpsilon()
 	//RecognizingEmptyWord = HasInitialStateWhichIsFinal();
 }
 
+void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
+{
+	SetOfTransitionsWithOutputs Ce;
+	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	{
+		auto& state = Delta[i];
+
+		auto it = state.find("");
+		if (it != state.end())
+		{
+			Ce[i].insert(
+				std::make_move_iterator(it->second.begin()),
+				std::make_move_iterator(it->second.end()));
+			Delta[i].erase(it); // Remove the epsilon transition (@it)
+		}
+	}
+
+	ClosureEpsilon(Ce, infinite);
+	if (infinite)
+	{
+		return;
+	}
+
+	AddIdentity(Ce);
+
+	// Keep the initial outputs with the empty word on the inpute line.
+	// <q, <r, o>> belings to Ce & q belongs to InitialStates & r belongs to FinalStates Then keep the output 'o'.
+	for (const auto& initialState : InitialStates)
+	{
+		bool addedAsFinal = false;
+		auto it = Ce.find(initialState);
+		if (it != Ce.end())
+		{
+			// Search the destinations for a FinalState
+			for (const auto& transition : it->second)
+			{
+				if (FinalStates.find(transition.state) != FinalStates.end())
+				{
+					InitialEpsilonOutputs.insert(transition.output);
+					// If there is a epsilon path from the initial state to a final one then the initial state should(and can be) final.
+					if (!addedAsFinal)
+					{
+						FinalStates.insert(initialState);
+						addedAsFinal = true;
+					}
+				}
+			}
+		}
+	}
+
+	// ReversedCe: { <r , <q, o>> | <q, <r, o> belongs to Ce }
+	SetOfTransitionsWithOutputs ReversedCe;
+	for (const auto& transitionsFromState : Ce)
+	{
+		const auto& state = transitionsFromState.first;
+		for (const auto& transition : transitionsFromState.second)
+		{
+			ReversedCe[transition.state].insert(Transition{ state, transition.output });
+		}
+	}
+
+	/* newDelta = { <q, <word, u+v+w>, r> |
+											<q', <word, v>, r'> belongs to Delta & 
+											word != epsilon &
+											<q, u> belongs to Ce(r') &
+											<r, w> belongs to ReversedCe(q') }
+	*/
+	DeltaType newDelta;
+	for (size_t qPrim = 0, bound = Delta.size(); qPrim < bound; ++qPrim)
+	{
+		for (const auto& transitionsWithWord : Delta[qPrim])
+		{
+			const auto& word = transitionsWithWord.first; // Note: there are no epsilon words (already removed)
+			for (const auto& transition : transitionsWithWord.second)
+			{
+				// transition.state is r';
+				for (const auto& backwardTransition : Ce[qPrim])
+				{
+					// backwardTransition.state is "q"
+					for (const auto& forwardTransition : ReversedCe[transition.state])
+					{
+						// forwardTransition.state is "r"
+						// Can there be multiple transitions inserted???
+						newDelta[backwardTransition.state][word].insert(Transition {
+							forwardTransition.state,
+							backwardTransition.output + transition.output + forwardTransition.output
+						});
+					}
+				}
+			}
+		}
+	}
+
+	Delta = std::move(newDelta);
+}
+
 // TODO: if the transducer is a real-time one(only single symbol on each transition, no epsilon transitions!)
 // then optimize and remove bunch of logic
 bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const

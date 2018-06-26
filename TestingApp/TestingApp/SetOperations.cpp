@@ -109,6 +109,14 @@ void AddIdentity(SetOfTransitions& r)
 	}
 }
 
+void AddIdentity(SetOfTransitionsWithOutputs& r)
+{
+	for (auto& transitions : r)
+	{
+		transitions.second.insert(Transition{ transitions.first, 0 });
+	}
+}
+
 void Print(const SetOfTransitions& r)
 {
 	for (const auto& transitionAndDestinations : r)

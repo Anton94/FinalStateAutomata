@@ -41,6 +41,9 @@ public:
 	// (e,0) transitions removing
 	void RemoveEpsilon();
 
+	// (e,X) transitions removing. When there is such transitions in the beginning (from the initial states) - they will be written to the @InitialEpsilonOutputs set.
+	void RemoveUpperEpsilon(bool& infinite);
+
 	// Only on a real-time transducer.
 	bool TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
 
@@ -56,6 +59,7 @@ private: // TODO: the key has to be something else, not a whole string!
 
 	bool RecognizingEmptyWord;
 
+	std::unordered_set<size_t> InitialEpsilonOutputs;
 private: // I do not want to copy this big structures, just to move them arround...
 	//FinalStateTransducer(const FinalStateTransducer& other) = delete; // TODO Whyyyy not able....
 	//FinalStateTransducer& operator=(const FinalStateTransducer& other) = delete;
