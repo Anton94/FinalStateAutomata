@@ -57,6 +57,8 @@ private:
 	void Proj1_2(SetOfTransitions& r) const;
 	void Proj1_23(SetOfTransitionsWithOutputs& r) const;
 
+	void MakeSquaredOutputTransducer();
+
 	// (e,0) transitions removing
 	void RemoveEpsilon();
 
@@ -75,6 +77,13 @@ private: // TODO: the key has to be something else, not a whole string!
 	DeltaType Delta; // State at position 'i' with word 'w' will lead to state(s) ('state') (which are indexes in the Delta vector) with output ('output') some number.
 	std::unordered_set<unsigned> FinalStates;
 	std::unordered_set<unsigned> InitialStates;
+
+	struct SquaredOutputTransducer
+	{
+		SetOfTransitionsWithOutputs Delta;
+		std::unordered_set<unsigned> FinalStates;
+		std::unordered_set<unsigned> InitialStates;
+	} SOT;
 
 	bool RecognizingEmptyWord;
 	bool Infinite;

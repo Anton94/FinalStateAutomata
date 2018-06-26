@@ -548,6 +548,87 @@ void FinalStateTransducer::Proj1_23(SetOfTransitionsWithOutputs& r) const
 	}
 }
 
+void FinalStateTransducer::MakeSquaredOutputTransducer()
+{
+	assert(IsRealTime());
+	assert(!IsInfinite());
+
+	SetOfTransitionsWithOutputs DeltaO;
+	Proj1_23(DeltaO);
+
+	typedef std::pair<unsigned, unsigned> P; // <p1, p2>
+
+	SOT.Delta.clear();
+
+	size_t initialIxIElementsCount = InitialStates.size() * InitialStates.size();
+	std::vector<P> pForIteration(initialIxIElementsCount);
+	std::unordered_map<P, unsigned,	boost::hash<P>> // <p1, p2>, id (it's place in the iteration vector)
+		pForLookups(initialIxIElementsCount);
+
+	unsigned id = 0;
+	for (const auto& initialStateIndex1 : InitialStates)
+	{
+		for (const auto& initialStateIndex2 : InitialStates)
+		{
+			pForIteration.push_back(P{ initialStateIndex1, initialStateIndex2 });
+			pForLookups[P{ initialStateIndex1, initialStateIndex2 }] = id;
+			++id;
+		}
+	}
+
+	typedef std::pair<std::pair<unsigned, unsigned>, std::pair<unsigned, unsigned>>	// < <o1, o2>, <q1, q2>>
+		PairOutputsAndStates;
+
+	Delta.clear();
+	Delta.reserve(initialIxIElementsCount); // Tiny posible optimization.
+	for (unsigned i = 0; i < pForIteration.size(); ++i)
+	{
+		const auto& p = pForIteration[i]; // a pair <p1, p2>
+		auto it1 = DeltaO.find(p.first);
+		auto it2 = DeltaO.find(p.second); // TODO: Move in 'if' for skipping the second search sometimes...
+		if (it1 != DeltaO.end() && it2 != DeltaO.end())
+		{
+			const auto& D1 = it1->second;
+			const auto& D2 = it2->second;
+
+			std::unordered_set<PairOutputsAndStates, boost::hash<PairOutputsAndStates>> N;
+			for (const auto& tr1 : D1)
+			{
+				for (const auto& tr2 : D2)
+				{
+					N.insert(PairOutputsAndStates { {tr1.output, tr2.output }, {tr1.state, tr2.state} }); // Inserting  < <o1, o2>, <q1, q2>>
+				}
+			}
+
+			// Add the new pair of states.
+			for (const auto& pairOutputsAndStates : N)
+			{
+				const auto it = pForLookups.find(pairOutputsAndStates.first);
+				if (it == pForLookups.end())
+				{
+					pForIteration.push_back(it->first);
+					pForLookups[it->first] = pForIteration.size();
+				}
+			}
+
+			// Update the FST's delta.
+			Delta.push_back(StateTransitions());
+			for (const auto& pairOutputsAndStates : N)
+			{
+				const auto it = pForLookups.find(pairOutputsAndStates.first);
+				if (it == pForLookups.end())
+				{
+					// TODO do it..
+				}
+			}
+		}
+	}
+
+	// Update the final states.
+
+	// Update the initial states.
+}
+
 void FinalStateTransducer::UpdateRecognizingEmptyWord()
 {
 	RecognizingEmptyWord = RealTime ?
@@ -643,7 +724,6 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 			it = Delta[currTransition.state].find("");
 			if (it != Delta[currTransition.state].end()) // There are epsilon transitions from this state to others.
 			{
-				// TODO: check for epsilon cycle...
 				for (const auto& transition : it->second) // Add them to the current level, because we have reached them withoud reading a symbol.
 				{
 #if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
