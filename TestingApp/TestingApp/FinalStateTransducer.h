@@ -53,7 +53,9 @@ private:
 
 	// Removes the states which are not connected to the a initial state or a final state.
 	void Trim();
-	void FinalStateTransducer::Proj1_2(SetOfTransitions& r) const;
+
+	void Proj1_2(SetOfTransitions& r) const;
+	void Proj1_23(SetOfTransitionsWithOutputs& r) const;
 
 	// (e,0) transitions removing
 	void RemoveEpsilon();

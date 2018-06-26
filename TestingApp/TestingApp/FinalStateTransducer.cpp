@@ -533,6 +533,21 @@ void FinalStateTransducer::Proj1_2(SetOfTransitions& r) const
 	}
 }
 
+void FinalStateTransducer::Proj1_23(SetOfTransitionsWithOutputs& r) const
+{
+	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	{
+		for (const auto& transitions : Delta[i])
+		{
+			for (const auto& transition : transitions.second)
+			{
+
+				r[i].insert(Transition{ transition.state, transition.output });
+			}
+		}
+	}
+}
+
 void FinalStateTransducer::UpdateRecognizingEmptyWord()
 {
 	RecognizingEmptyWord = RealTime ?
