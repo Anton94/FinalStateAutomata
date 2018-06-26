@@ -301,7 +301,7 @@ void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 		return;
 	}
 
-	AddIdentity(Ce);
+	AddIdentity(Ce, Delta.size());
 
 	// Keep the initial outputs with the empty word on the inpute line.
 	// <q, <r, o>> belings to Ce & q belongs to InitialStates & r belongs to FinalStates Then keep the output 'o'.
@@ -382,8 +382,7 @@ void FinalStateTransducer::MakeRealTime(bool& infinite)
 	Infinite = infinite;
 }
 
-// TODO: if the transducer is a real-time one(only single symbol on each transition, no epsilon transitions!)
-// then optimize and remove bunch of logic
+// Works only for one-symbol transducer(the transitions are only with one symbol or epsilon)
 bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
 {
 	if (!word) return false;

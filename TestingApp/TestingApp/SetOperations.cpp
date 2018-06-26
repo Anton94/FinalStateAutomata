@@ -109,11 +109,11 @@ void AddIdentity(SetOfTransitions& r)
 	}
 }
 
-void AddIdentity(SetOfTransitionsWithOutputs& r)
+void AddIdentity(SetOfTransitionsWithOutputs& r, size_t numberOfStates)
 {
-	for (auto& transitions : r)
+	for (size_t i = 0; i < numberOfStates; ++i)
 	{
-		transitions.second.insert(Transition{ transitions.first, 0 });
+		r[i].insert(Transition{ i, 0 });
 	}
 }
 

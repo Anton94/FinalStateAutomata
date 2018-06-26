@@ -43,7 +43,7 @@ void TransitiveClosure(SetOfTransitions& r);
 void ClosureEpsilon(SetOfTransitionsWithOutputs& r, bool& infinite);
 
 void AddIdentity(SetOfTransitions& r);
-void AddIdentity(SetOfTransitionsWithOutputs& r);
+void AddIdentity(SetOfTransitionsWithOutputs& r, size_t numberOfStates);
 
 void Print(const SetOfTransitions& r);
 void Print(const SetOfTransitionsWithOutputs& r);
