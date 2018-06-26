@@ -345,19 +345,20 @@ void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 											<q, u> belongs to Ce(r') &
 											<r, w> belongs to ReversedCe(q') }
 	*/
-	DeltaType newDelta;
+	DeltaType newDelta(Delta.size());
 	for (size_t qPrim = 0, bound = Delta.size(); qPrim < bound; ++qPrim)
 	{
+		// TODO: use directly Delta!!!
 		for (const auto& transitionsWithWord : Delta[qPrim])
 		{
 			const auto& word = transitionsWithWord.first; // Note: there are no epsilon words (already removed)
 			for (const auto& transition : transitionsWithWord.second)
 			{
 				// transition.state is r';
-				for (const auto& backwardTransition : Ce[qPrim])
+				for (const auto& backwardTransition : ReversedCe[qPrim])
 				{
 					// backwardTransition.state is "q"
-					for (const auto& forwardTransition : ReversedCe[transition.state])
+					for (const auto& forwardTransition : Ce[transition.state])
 					{
 						// forwardTransition.state is "r"
 						// Can there be multiple transitions inserted???
