@@ -94,12 +94,6 @@ bool checkInputCorrectness(const char* regExpr)
 					" Failed at position ", std::to_string(pCurrStart - pRexExprStart).c_str(), ".");
 				return false;
 			}
-			if (separatorAt == 0)
-			{
-				logMessage("Missing word before the separator(:) while parsing an expression \"", std::string(pCurrStart, currLength).c_str(), "\"",
-					" Failed at position ", std::to_string(pCurrStart - pRexExprStart).c_str(), ".");
-				return false;
-			}
 
 			dummyStack.push_back(1);
 		}
