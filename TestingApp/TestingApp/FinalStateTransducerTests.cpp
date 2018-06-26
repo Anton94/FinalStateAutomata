@@ -11,7 +11,7 @@ struct TestCaseInfo
 	bool infinite;
 	bool functional;
 	typedef std::pair<std::string,  // Word for traversing and expected outputs.
-					  std::vector<int>> // a list of desired outputs (if empty then the word is not from the language)
+					  std::vector<unsigned>> // a list of desired outputs (if empty then the word is not from the language)
 		WordAndExpectedOutputs;
 	std::vector<WordAndExpectedOutputs> wordsAndExpectedOutputs;
 };
@@ -916,7 +916,7 @@ void RunFinalStateTransducerTests()
 		testCases += testCase.wordsAndExpectedOutputs.size();
 		for (const auto& wordAndOutputs : testCase.wordsAndExpectedOutputs)
 		{
-			std::unordered_set<size_t> outputs;
+			std::unordered_set<unsigned> outputs;
 			const auto& testWord = wordAndOutputs.first;
 			const auto& testOutputs = wordAndOutputs.second;
 

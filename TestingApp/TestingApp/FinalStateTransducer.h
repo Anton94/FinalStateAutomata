@@ -26,18 +26,18 @@ public:
 	void Concat(FinalStateTransducer& right);
 	void Union(FinalStateTransducer& right);
 
-	void Remap(size_t offset);
-	void RemapDelta(size_t offset);
-	void RemapInitialStates(size_t offset);
-	void RemapFinalStates(size_t offset);
+	void Remap(unsigned offset);
+	void RemapDelta(unsigned offset);
+	void RemapInitialStates(unsigned offset);
+	void RemapFinalStates(unsigned offset);
 
-	void MoveRightInitialStatesIntoLeft(FinalStateTransducer& right, size_t offset);
-	void MoveRightFinalStatesIntoLeft(FinalStateTransducer& right, size_t offset);
+	void MoveRightInitialStatesIntoLeft(FinalStateTransducer& right, unsigned offset);
+	void MoveRightFinalStatesIntoLeft(FinalStateTransducer& right, unsigned offset);
 
-	void MakeSingleInitialState(size_t newInitialStateIndex);
+	void MakeSingleInitialState(unsigned newInitialStateIndex);
 
 	// Works only for one-symbol transducer(the transitions are only with one symbol or epsilon)
-	bool TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
+	bool TraverseWithWord(const char* word, std::unordered_set<unsigned>& outputs) const;
 
 	bool GetRecognizingEmptyWord() const;
 
@@ -66,23 +66,23 @@ private:
 	bool RealTimeIsRecognizingEmptyWord() const;
 	bool StandardIsRecognizingEmptyWord() const;
 
-	bool StandardTrawerseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
-	bool RealTimeTraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
+	bool StandardTrawerseWithWord(const char* word, std::unordered_set<unsigned>& outputs) const;
+	bool RealTimeTraverseWithWord(const char* word, std::unordered_set<unsigned>& outputs) const;
 private: // TODO: the key has to be something else, not a whole string!
 	typedef std::unordered_map<std::string, std::unordered_set<Transition>>
 		StateTransitions;
 	typedef std::vector<StateTransitions> DeltaType;
 	DeltaType Delta; // State at position 'i' with word 'w' will lead to state(s) ('state') (which are indexes in the Delta vector) with output ('output') some number.
-	std::unordered_set<size_t> FinalStates;
-	std::unordered_set<size_t> InitialStates;
+	std::unordered_set<unsigned> FinalStates;
+	std::unordered_set<unsigned> InitialStates;
 
 	bool RecognizingEmptyWord;
 	bool Infinite;
 	bool RealTime;
 
 	SetOfTransitionsWithOutputs CloseEpsilonOnStates;
-	std::unordered_set<size_t> StatesWithEpsilonCycleWithPositiveOutput;
-	std::unordered_set<size_t> InitialEpsilonOutputs;
+	std::unordered_set<unsigned> StatesWithEpsilonCycleWithPositiveOutput;
+	std::unordered_set<unsigned> InitialEpsilonOutputs;
 private: // I do not want to copy this big structures, just to move them arround...
 	//FinalStateTransducer(const FinalStateTransducer& other) = delete; // TODO Whyyyy not able....
 	//FinalStateTransducer& operator=(const FinalStateTransducer& other) = delete;

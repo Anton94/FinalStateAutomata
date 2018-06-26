@@ -15,7 +15,7 @@ FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int len
 	*(regExpr + separator) = '\0';
 	*(regExpr + length) = '\0';
 	const char* pOutputNumber = regExpr + separator + 1; // + ':'.
-	size_t outputNumber = atoi(pOutputNumber);
+	unsigned outputNumber = atoi(pOutputNumber);
 #if defined(INFO)
 		std::cout << "Creating a transducer for word \"" << word << "\" with output number " << outputNumber << std::endl; // Only info purposes.
 #endif
@@ -31,14 +31,14 @@ void FinalStateTransducer::CloseStar()
 {
 	ClosePlus();
 	FinalStates.clear();
-	FinalStates.insert(Delta.size() - 1); // Add the new state as a final,
+	FinalStates.insert((unsigned) Delta.size() - 1); // Add the new state as a final,
 }
 
 void FinalStateTransducer::ClosePlus()
 {
 	// Make a new state with no transitions.
 	Delta.push_back(StateTransitions());
-	size_t newStateIndex = Delta.size() - 1;
+	unsigned newStateIndex = (unsigned) Delta.size() - 1;
 
 	for (const auto& finalStateIndex : FinalStates)
 	{
@@ -50,7 +50,7 @@ void FinalStateTransducer::ClosePlus()
 
 void FinalStateTransducer::Concat(FinalStateTransducer& right)
 {
-	right.Remap(Delta.size());
+	right.Remap((unsigned) Delta.size());
 
 	Delta.insert(Delta.end(),
 		std::make_move_iterator(right.Delta.begin()),
@@ -70,8 +70,8 @@ void FinalStateTransducer::Concat(FinalStateTransducer& right)
 
 void FinalStateTransducer::Union(FinalStateTransducer& right)
 {
-	auto offset = Delta.size();
-	right.RemapDelta(Delta.size());
+	unsigned offset = (unsigned) Delta.size();
+	right.RemapDelta(offset);
 
 	Delta.insert(Delta.end(),
 		std::make_move_iterator(right.Delta.begin()),
@@ -82,14 +82,14 @@ void FinalStateTransducer::Union(FinalStateTransducer& right)
 }
 
 
-void FinalStateTransducer::Remap(size_t offset)
+void FinalStateTransducer::Remap(unsigned offset)
 {
 	RemapDelta(offset);
 	RemapInitialStates(offset);
 	RemapFinalStates(offset);
 }
 
-void FinalStateTransducer::RemapDelta(size_t offset)
+void FinalStateTransducer::RemapDelta(unsigned offset)
 {
 	// I do not need this explicit remaping. TODO keep the offset 'per state' and recalculate "on the fly"?
 	for (auto& state : Delta)
@@ -106,9 +106,9 @@ void FinalStateTransducer::RemapDelta(size_t offset)
 	}
 }
 
-void FinalStateTransducer::RemapInitialStates(size_t offset)
+void FinalStateTransducer::RemapInitialStates(unsigned offset)
 {
-	std::unordered_set<size_t> newInitialStates;
+	std::unordered_set<unsigned> newInitialStates;
 	for (auto& stateIndex : InitialStates)
 	{
 		newInitialStates.insert(stateIndex + offset);
@@ -116,9 +116,9 @@ void FinalStateTransducer::RemapInitialStates(size_t offset)
 	InitialStates = std::move(newInitialStates);
 }
 
-void FinalStateTransducer::RemapFinalStates(size_t offset)
+void FinalStateTransducer::RemapFinalStates(unsigned offset)
 {
-	std::unordered_set<size_t> newFinalStates;
+	std::unordered_set<unsigned> newFinalStates;
 	for (auto& stateIndex : FinalStates)
 	{
 		newFinalStates.insert(stateIndex + offset);
@@ -126,7 +126,7 @@ void FinalStateTransducer::RemapFinalStates(size_t offset)
 	FinalStates = std::move(newFinalStates);
 }
 
-void FinalStateTransducer::MoveRightInitialStatesIntoLeft(FinalStateTransducer& right, size_t offset)
+void FinalStateTransducer::MoveRightInitialStatesIntoLeft(FinalStateTransducer& right, unsigned offset)
 {
 	for (auto& intialStateIndex : right.InitialStates)
 	{
@@ -134,7 +134,7 @@ void FinalStateTransducer::MoveRightInitialStatesIntoLeft(FinalStateTransducer& 
 	}
 }
 
-void FinalStateTransducer::MoveRightFinalStatesIntoLeft(FinalStateTransducer& right, size_t offset)
+void FinalStateTransducer::MoveRightFinalStatesIntoLeft(FinalStateTransducer& right, unsigned offset)
 {
 	for (auto& finalStateIndex : right.FinalStates)
 	{
@@ -142,7 +142,7 @@ void FinalStateTransducer::MoveRightFinalStatesIntoLeft(FinalStateTransducer& ri
 	}
 }
 
-void FinalStateTransducer::MakeSingleInitialState(size_t newInitialStateIndex)
+void FinalStateTransducer::MakeSingleInitialState(unsigned newInitialStateIndex)
 {
 	for (const auto& initialStateIndex : InitialStates)
 	{
@@ -177,7 +177,7 @@ void FinalStateTransducer::Expand()
 					const auto newStatesCount = transitionWordLen - 1;
 					const auto currStatesCount = Delta.size();
 					Delta.resize(currStatesCount + newStatesCount);
-					auto newStateIndex = currStatesCount;
+					unsigned newStateIndex = (unsigned) currStatesCount;
 
 					// q --word[0]--> <r00, out0>
 					const char* pWord = transitionWord.c_str();
@@ -208,7 +208,7 @@ void FinalStateTransducer::Expand()
 }
 
 // Separates the epsilon transitions in @v (those with @output 0) to the set @s
-void SeparateEpsilonTransitions(std::unordered_set<Transition>& v, size_t output, std::unordered_set<size_t>& s)
+void SeparateEpsilonTransitions(std::unordered_set<Transition>& v, unsigned output, std::unordered_set<unsigned>& s)
 {
 	auto it = v.begin();
 	while (it != v.end())
@@ -231,7 +231,7 @@ void FinalStateTransducer::RemoveEpsilon()
 
 	// Add only the states which has (e,0) transition (i.e. transition with empty word and 0 output to another state)
 	// and in the same time remove them from Delta.
-	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
 		auto& state = Delta[i];
 
@@ -269,7 +269,7 @@ void FinalStateTransducer::RemoveEpsilon()
 	}
 
 	// Change the new initial states
-	std::unordered_set<size_t> newInitialStates = InitialStates;
+	std::unordered_set<unsigned> newInitialStates = InitialStates;
 	for (auto& initialStateIndex : InitialStates)
 	{
 		newInitialStates.insert(Ce[initialStateIndex].begin(), Ce[initialStateIndex].end());
@@ -283,7 +283,7 @@ void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 	CloseEpsilonOnStates.clear();
 
 	SetOfTransitionsWithOutputs& Ce = CloseEpsilonOnStates;
-	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
 		auto& state = Delta[i];
 
@@ -351,7 +351,7 @@ void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 											<r, w> belongs to ReversedCe(q') }
 	*/
 	DeltaType newDelta(Delta.size());
-	for (size_t qPrim = 0, bound = Delta.size(); qPrim < bound; ++qPrim)
+	for (unsigned qPrim = 0, bound = (unsigned) Delta.size(); qPrim < bound; ++qPrim)
 	{
 		// TODO: use directly Delta!!!
 		for (const auto& transitionsWithWord : Delta[qPrim])
@@ -397,7 +397,7 @@ void FinalStateTransducer::Trim()
 	Proj1_2(r);
 	TransitiveClosure(r);
 
-	std::unordered_set<size_t> reachableStates;
+	std::unordered_set<unsigned> reachableStates;
 	// Add the initial states.
 	for (const auto& initialStateIndex : InitialStates)
 	{
@@ -417,7 +417,7 @@ void FinalStateTransducer::Trim()
 		}
 	}
 
-	std::unordered_set<size_t> coReachableStates;
+	std::unordered_set<unsigned> coReachableStates;
 	// Add the final states.
 	for (const auto& finalStateIndex : FinalStates)
 	{
@@ -425,7 +425,7 @@ void FinalStateTransducer::Trim()
 	}
 
 	// Remove all states which are not connected to a final one.
-	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
 		auto it = r.find(i);
 		if (it != r.end())
@@ -443,7 +443,7 @@ void FinalStateTransducer::Trim()
 	}
 
 	// Remove the non reachable or co-reachabe state transitions.
-	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
 		if (reachableStates.find(i) == reachableStates.end() || coReachableStates.find(i) == coReachableStates.end())
 		{
@@ -468,11 +468,11 @@ void FinalStateTransducer::Trim()
 	}
 
 	// Remove the deleted states from the vector and remap the transitions
-	const size_t REMOVED_STATE = size_t(-1);
+	const unsigned REMOVED_STATE = unsigned(-1);
 
-	std::unordered_map<size_t, size_t> remapingOfStateIndexes;
-	size_t newStateIndex = 0;
-	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	std::unordered_map<unsigned, unsigned> remapingOfStateIndexes;
+	unsigned newStateIndex = 0;
+	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
 		if (Delta[i].empty())
 		{
@@ -486,7 +486,7 @@ void FinalStateTransducer::Trim()
 	}
 
 	// "Squash" the elements in the vector.
-	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
 		const auto& newStateIndex = remapingOfStateIndexes[i];
 		if (newStateIndex != REMOVED_STATE)
@@ -520,7 +520,7 @@ void FinalStateTransducer::Trim()
 
 void FinalStateTransducer::Proj1_2(SetOfTransitions& r) const
 {
-	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
 		for (const auto& transitions : Delta[i])
 		{
@@ -535,7 +535,7 @@ void FinalStateTransducer::Proj1_2(SetOfTransitions& r) const
 
 void FinalStateTransducer::Proj1_23(SetOfTransitionsWithOutputs& r) const
 {
-	for (size_t i = 0, bound = Delta.size(); i < bound; ++i)
+	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
 		for (const auto& transitions : Delta[i])
 		{
@@ -556,7 +556,7 @@ void FinalStateTransducer::UpdateRecognizingEmptyWord()
 }
 
 // Works only for one-symbol transducer(the transitions are only with one symbol or epsilon)
-bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
+bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<unsigned>& outputs) const
 {
 	if (IsRealTime())
 	{
@@ -566,7 +566,7 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 	return StandardTrawerseWithWord(word, outputs);
 }
 
-bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
+bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unordered_set<unsigned>& outputs) const
 {
 	if (!word) return false;
 	const char* pWord = word;
@@ -580,7 +580,7 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 	struct TraverseTransition
 	{
 		int state;
-		size_t accumulatedOutput;
+		unsigned accumulatedOutput;
 	};
 	TraverseTransition BFSLevelSeparator{ -1, 0 };
 	std::deque<TraverseTransition> q;
@@ -592,7 +592,7 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 	}
 
 #if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
-	typedef std::tuple<size_t, size_t, size_t> VisitedPair; // .first is the source, .second is the destination state
+	typedef std::tuple<unsigned, unsigned, unsigned> VisitedPair; // .first is the source, .second is the destination state
 	std::unordered_set<VisitedPair,
 						boost::hash<VisitedPair>
 						> visitedStateToStateWithEpsilon;
@@ -648,7 +648,7 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 				{
 #if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
 					const auto accomulatedOutput = currTransition.accumulatedOutput + transition.output;
-					const std::tuple<size_t, size_t, size_t> visitedPairWithEpsilon { currTransition.state, transition.state, accomulatedOutput };
+					const std::tuple<unsigned, unsigned, unsigned> visitedPairWithEpsilon { currTransition.state, transition.state, accomulatedOutput };
 					if (visitedStateToStateWithEpsilon.find(visitedPairWithEpsilon) != visitedStateToStateWithEpsilon.end())
 					{
 						continue;
@@ -673,7 +673,7 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 
 	// TODO the first one is the level separator...
 	// Try to find an final state on the last reached
-	std::unordered_set<size_t> accumulatedOutputs;
+	std::unordered_set<unsigned> accumulatedOutputs;
 #if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
 	visitedStateToStateWithEpsilon.clear();
 #endif
@@ -701,7 +701,7 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 			{
 #if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
 				const auto accomulatedOutput = currTransition.accumulatedOutput + transition.output;
-				const std::tuple<size_t, size_t, size_t> visitedPairWithEpsilon{ currTransition.state, transition.state, accomulatedOutput };
+				const std::tuple<unsigned, unsigned, unsigned> visitedPairWithEpsilon{ currTransition.state, transition.state, accomulatedOutput };
 				if (visitedStateToStateWithEpsilon.find(visitedPairWithEpsilon) != visitedStateToStateWithEpsilon.end())
 				{
 					continue;
@@ -728,7 +728,7 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 	return !outputs.empty();
 }
 
-bool FinalStateTransducer::RealTimeTraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
+bool FinalStateTransducer::RealTimeTraverseWithWord(const char* word, std::unordered_set<unsigned>& outputs) const
 {
 	if (!word) return false;
 	const char* pWord = word;
@@ -741,7 +741,7 @@ bool FinalStateTransducer::RealTimeTraverseWithWord(const char* word, std::unord
 	struct TraverseTransition
 	{
 		int state;
-		size_t accumulatedOutput;
+		unsigned accumulatedOutput;
 	};
 	TraverseTransition BFSLevelSeparator{ -1, 0 };
 	std::deque<TraverseTransition> q;
@@ -792,7 +792,7 @@ bool FinalStateTransducer::RealTimeTraverseWithWord(const char* word, std::unord
 	assert(q.front().state == -1);
 	q.pop_front(); // Remove the level separator.
 
-	std::unordered_set<size_t> accumulatedOutputs;
+	std::unordered_set<unsigned> accumulatedOutputs;
 	while (!q.empty())
 	{
 		const auto& currTransition = q.front();

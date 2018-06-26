@@ -12,11 +12,11 @@ void TransitiveClosure(SetOfTransitions& r)
 
 	for (auto& destinations : cR) // @destinations is a pair <a, [b]> for which the array [b] is all 'b', such that (a, b) belongs to 'cR'
 	{
-		std::unordered_set<size_t> currentlyProcessingDestinations = destinations.second;
+		std::unordered_set<unsigned> currentlyProcessingDestinations = destinations.second;
 
 		while (currentlyProcessingDestinations.size() > 0)
 		{
-			std::unordered_set<size_t> newDestinations;
+			std::unordered_set<unsigned> newDestinations;
 			for (auto b : currentlyProcessingDestinations)
 			{
 				const auto it = r.find(b); // @it is a pair <b, [c]> for which the array [c] is all 'c', such that (b, c) belongs to 'r'
@@ -45,7 +45,7 @@ void TransitiveClosure(SetOfTransitions& r)
 	r = std::move(cR);
 }
 
-void ClosureEpsilon(SetOfTransitionsWithOutputs& r, bool& infinite, std::unordered_set<size_t>& statesWithEpsilonCycleWithPositiveOutput)
+void ClosureEpsilon(SetOfTransitionsWithOutputs& r, bool& infinite, std::unordered_set<unsigned>& statesWithEpsilonCycleWithPositiveOutput)
 {
 	statesWithEpsilonCycleWithPositiveOutput.clear();
 	infinite = false;
@@ -112,7 +112,7 @@ void AddIdentity(SetOfTransitionsWithOutputs& r, size_t numberOfStates)
 {
 	for (size_t i = 0; i < numberOfStates; ++i)
 	{
-		r[i].insert(Transition{ i, 0 });
+		r[i].insert(Transition{ (unsigned)i, 0 });
 	}
 }
 

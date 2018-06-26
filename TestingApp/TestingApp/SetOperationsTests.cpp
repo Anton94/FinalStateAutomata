@@ -974,7 +974,7 @@ void RunCloseEpsilonTests()
 		auto inputSetClosed = closureEpsilonTestCases[i].input;
 
 		bool infinite;
-		std::unordered_set<size_t> statesWithNonTrivialCycle; // TODO check those, too.
+		std::unordered_set<unsigned> statesWithNonTrivialCycle; // TODO check those, too.
 		ClosureEpsilon(inputSetClosed, infinite, statesWithNonTrivialCycle);
 
 		const auto expectedInf = closureEpsilonTestCases[i].inf;
