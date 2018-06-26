@@ -7,6 +7,8 @@
 #include "AssertLog.h"
 
 FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int length) // The regular expression should be of type: 'word:number'
+	: Infinite(false)
+	, RecognizingEmptyWord(false)
 {
 	char* word = regExpr;
 	*(regExpr + separator) = '\0';
@@ -22,8 +24,6 @@ FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int len
 	Delta[0][word].insert(Transition{ 1, outputNumber }); // One transition: 0 -> 1 via word @word and output @outputNumber.
 	FinalStates.insert(1); // 1 is a final state.
 	InitialStates.insert(0); // q0 which is 0 is the initial state
-
-	RecognizingEmptyWord = false;
 }
 
 void FinalStateTransducer::CloseStar()
@@ -374,6 +374,14 @@ void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 	Delta = std::move(newDelta);
 }
 
+void FinalStateTransducer::MakeRealTime(bool& infinite)
+{
+	RemoveEpsilon();
+	Expand();
+	RemoveUpperEpsilon(infinite);
+	Infinite = infinite;
+}
+
 // TODO: if the transducer is a real-time one(only single symbol on each transition, no epsilon transitions!)
 // then optimize and remove bunch of logic
 bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
@@ -541,6 +549,11 @@ void FinalStateTransducer::UpdateRecognizingEmptyWord()
 bool FinalStateTransducer::GetRecognizingEmptyWord() const
 {
 	return RecognizingEmptyWord;
+}
+
+bool FinalStateTransducer::IsInfinite() const
+{
+	return Infinite;
 }
 
 bool FinalStateTransducer::HasInitialStateWhichIsFinal() const

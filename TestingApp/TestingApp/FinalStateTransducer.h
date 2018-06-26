@@ -36,7 +36,18 @@ public:
 
 	void MakeSingleInitialState(int newInitialStateIndex);
 
-	void Expand(); // Each transition to be with only single symbol(or epsilon)
+	// Only on a real-time transducer.
+	bool TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
+
+	void UpdateRecognizingEmptyWord();
+	bool GetRecognizingEmptyWord() const;
+
+	bool IsInfinite() const;
+
+	void MakeRealTime(bool& infinite);
+private:
+	// Each transition to be with only single symbol(or epsilon)
+	void Expand();
 
 	// (e,0) transitions removing
 	void RemoveEpsilon();
@@ -44,12 +55,6 @@ public:
 	// (e,X) transitions removing. When there is such transitions in the beginning (from the initial states) - they will be written to the @InitialEpsilonOutputs set.
 	void RemoveUpperEpsilon(bool& infinite);
 
-	// Only on a real-time transducer.
-	bool TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const;
-
-	void UpdateRecognizingEmptyWord();
-	bool GetRecognizingEmptyWord() const;
-private:
 	bool HasInitialStateWhichIsFinal() const;
 private: // TODO: the key has to be something else, not a whole string!
 	typedef std::unordered_map<std::string, std::unordered_set<Transition>>
@@ -60,6 +65,7 @@ private: // TODO: the key has to be something else, not a whole string!
 	std::unordered_set<size_t> InitialStates;
 
 	bool RecognizingEmptyWord;
+	bool Infinite;
 
 	std::unordered_set<size_t> InitialEpsilonOutputs;
 private: // I do not want to copy this big structures, just to move them arround...
