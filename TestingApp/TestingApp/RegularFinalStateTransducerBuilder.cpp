@@ -87,8 +87,6 @@ void RegularFinalStateTransducerBuilder::build()
 			: "There are no constructed objects."))	;
 	transducer = &stack[0];  // TODO move it here!!!!
 
-	transducer->UpdateRecognizingEmptyWord();
-
 #if defined(INFO)
 	std::cout << "Done buidling it.\n";
 #endif

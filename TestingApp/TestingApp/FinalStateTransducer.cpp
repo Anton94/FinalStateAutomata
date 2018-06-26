@@ -7,8 +7,9 @@
 #include "AssertLog.h"
 
 FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int length) // The regular expression should be of type: 'word:number'
-	: Infinite(false)
-	, RecognizingEmptyWord(false)
+	: RecognizingEmptyWord(false)
+	, Infinite(false)
+	, RealTime(false)
 {
 	char* word = regExpr;
 	*(regExpr + separator) = '\0';
@@ -381,15 +382,34 @@ void FinalStateTransducer::MakeRealTime(bool& infinite)
 	Expand();
 	RemoveUpperEpsilon(infinite);
 	Infinite = infinite;
+	RealTime = !infinite; // If it is not an infinite then the conversion to real-time transducer was successful
+}
+
+void FinalStateTransducer::UpdateRecognizingEmptyWord()
+{
+	RecognizingEmptyWord = RealTime ?
+		RealTimeIsRecognizingEmptyWord() :
+		StandardIsRecognizingEmptyWord();
 }
 
 // Works only for one-symbol transducer(the transitions are only with one symbol or epsilon)
 bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
 {
+	if (IsRealTime())
+	{
+		return RealTimeTraverseWithWord(word, outputs);
+	}
+
+	return StandardTrawerseWithWord(word, outputs);
+}
+
+bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
+{
+	assert(false);
 	if (!word) return false;
 	const char* pWord = word;
 #if defined(INFO)
-	std::cout << "Traversing with \"" << pWord << "\" word...\n";
+	std::cout << "Standard Traversing with \"" << pWord << "\" word...\n";
 #endif
 
 	char strTmp[] = "x";
@@ -541,9 +561,94 @@ bool FinalStateTransducer::TraverseWithWord(const char* word, std::unordered_set
 	return true;
 }
 
-void FinalStateTransducer::UpdateRecognizingEmptyWord()
+bool FinalStateTransducer::RealTimeTraverseWithWord(const char* word, std::unordered_set<size_t>& outputs) const
 {
-	RecognizingEmptyWord = HasInitialStateWhichIsFinal();
+	if (!word) return false;
+	const char* pWord = word;
+#if defined(INFO)
+	std::cout << "RealTime Traversing with \"" << pWord << "\" word...\n";
+#endif
+
+	char strTmp[] = "x";
+
+	struct TraverseTransition
+	{
+		int state;
+		size_t accumulatedOutput;
+	};
+	TraverseTransition BFSLevelSeparator{ -1, 0 };
+	std::deque<TraverseTransition> q;
+
+	q.push_back(BFSLevelSeparator);
+	for (const auto& initialStateIndex : InitialStates)
+	{
+		q.push_back(TraverseTransition{ static_cast<int>(initialStateIndex), 0 }); // Fictial initial transition with the empty word and no output to each initial state.
+	}
+
+	while (*pWord)
+	{
+		TraverseTransition currTransition = q.front();
+		q.pop_front();
+
+		if (q.empty())
+		{
+			return false;
+		}
+		assert(currTransition.state == -1); // Only the level separator can have negative state's index.
+
+		q.push_back(currTransition); // Move the separator to the "end".
+
+		// Read all states at the 'next' level and add the posibile transitions.
+		while (q.front().state != -1) // Untill the level separator.
+		{
+			currTransition = q.front();
+			q.pop_front();
+
+			// If the state has a transition with the symbol *word, then add it
+			//TODO remove the "hack"
+			strTmp[0] = *pWord;
+			auto it = Delta[currTransition.state].find(strTmp);
+			if (it != Delta[currTransition.state].end()) // Found a transition with *word symbol.
+			{
+				for (const auto& transition : it->second) // Add all found transitions to the next level, because we have read one more symbol.
+				{
+					q.push_back(TraverseTransition{ (int)transition.state, currTransition.accumulatedOutput + transition.output });
+				}
+			}
+
+			assert(!q.empty());
+		}
+		++pWord;
+	}
+
+	assert(!q.empty());
+	assert(q.front().state == -1);
+	q.pop_front(); // Remove the level separator.
+
+
+
+	std::unordered_set<size_t> accumulatedOutputs;
+	while (!q.empty())
+	{
+		const auto& currTransition = q.front();
+		if (FinalStates.find(currTransition.state) != FinalStates.end())
+		{
+			accumulatedOutputs.insert(currTransition.accumulatedOutput);
+		}
+		q.pop_front();
+	}
+
+	if (!*word && RecognizingEmptyWord)
+	{
+		outputs = std::move(InitialEpsilonOutputs);
+		outputs.insert(0);
+	}
+	else
+	{
+		outputs = std::move(accumulatedOutputs);
+	}
+
+	return !outputs.empty();
 }
 
 bool FinalStateTransducer::GetRecognizingEmptyWord() const
@@ -556,13 +661,53 @@ bool FinalStateTransducer::IsInfinite() const
 	return Infinite;
 }
 
-bool FinalStateTransducer::HasInitialStateWhichIsFinal() const
+bool FinalStateTransducer::IsRealTime() const
+{
+	return RealTime;
+}
+
+bool FinalStateTransducer::RealTimeIsRecognizingEmptyWord() const
 {
 	for (const auto& initialState : InitialStates)
 	{
 		if (FinalStates.find(initialState) != FinalStates.end())
 		{
 			return true;
+		}
+	}
+	return false;
+}
+
+// Note if it is infinite ambiguous for the empty word then it will return false.
+bool FinalStateTransducer::StandardIsRecognizingEmptyWord() const
+{
+	// TODO I do not need the outputs.
+	SetOfTransitionsWithOutputs Ce;
+	for (const auto initialState : InitialStates)
+	{
+		auto& state = Delta[initialState];
+
+		auto it = state.find("");
+		if (it != state.end())
+		{
+			Ce[initialState].insert(it->second.begin(), it->second.end());
+		}
+	}
+	bool infinite;
+	ClosureEpsilon(Ce, infinite);
+	if (infinite)
+	{
+		return false;
+	}
+
+	for (const auto& initialState : InitialStates)
+	{
+		for (const auto transition : Ce[initialState])
+		{
+			if (FinalStates.find(transition.state) != FinalStates.end())
+			{
+				return true;
+			}
 		}
 	}
 	return false;
