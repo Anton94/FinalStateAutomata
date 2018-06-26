@@ -363,6 +363,348 @@ static void PopulateWithTestCases()
 			{ "abcdeabcdeabcde", { 45 } },
 		}
 	});
+	FSTTestcases.push_back({
+		"a:5 :3 .",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "a", { 8 } },
+			{ "ab", {} },
+			{ "aa", {} },
+			{ "aaa", {} },
+			{ "b", {} },
+			{ "c", {} },
+		}
+	});
+	FSTTestcases.push_back({
+		"a:5 :3 . *",
+		false,
+		false,
+		{
+			{ "ab", {} },
+			{ "b", {} },
+			{ "aba", {} },
+			{ "abaa", {} },
+			{ "c", {} },
+			{ "", { 0 } },
+			{ "a", { 8 } },
+			{ "aa", { 16 } },
+			{ "aaa", { 24 } },
+		}
+	});
+	FSTTestcases.push_back({
+		"tony:5 :3 . *",
+		false,
+		false,
+		{
+			{ "tonyb", {} },
+			{ "b", {} },
+			{ "tonybtony", {} },
+			{ "tonybtonytony", {} },
+			{ "c", {} },
+			{ "", { 0 } },
+			{ "tony", { 8 } },
+			{ "tonytony", { 16 } },
+			{ "tonytonytony", { 24 } },
+		}
+	});
+	FSTTestcases.push_back({
+		"a:5 :3 |",
+		false,
+		false,
+		{
+			{ "ab", {} },
+			{ "aa", {} },
+			{ "b", {} },
+			{ "aba", {} },
+			{ "abaa", {} },
+			{ "c", {} },
+			{ "", { 3, 0 } },
+			{ "a", { 5 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":3 a:5 |",
+		false,
+		false,
+		{
+			{ "ab", {} },
+			{ "aa", {} },
+			{ "b", {} },
+			{ "aba", {} },
+			{ "abaa", {} },
+			{ "c", {} },
+			{ "", { 3, 0 } },
+			{ "a", { 5 } },
+		}
+	});
+	FSTTestcases.push_back({
+		"a:5 :3 | *",
+		true,
+		false,
+		{
+		}
+	});
+	FSTTestcases.push_back({
+		":35 abc:15 . * ef:17 |",
+		false,
+		false,
+		{
+			{ "abcef", {} },
+			{ "e", {} },
+			{ "aba", {} },
+			{ "abaa", {} },
+			{ "c", {} },
+			{ "abcabcef", {} },
+			{ "", { 0 } },
+			{ "abc", { 50 } },
+			{ "ef", { 17 } },
+			{ "abcabc", { 100 } },
+			{ "abcabcabc", { 150 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":35 abc:15 . + ef:17 |",
+		false,
+		false,
+		{
+			{ "abcef", {} },
+			{ "e", {} },
+			{ "aba", {} },
+			{ "abaa", {} },
+			{ "c", {} },
+			{ "abcabcef", {} },
+			{ "", {} },
+			{ "abc", { 50 } },
+			{ "ef", { 17 } },
+			{ "abcabc", { 100 } },
+			{ "abcabcabc", { 150 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":35 :45 :55 | | abc:15 . + ef:17 |",
+		false,
+		false,
+		{
+			{ "abcef", {} },
+			{ "e", {} },
+			{ "aba", {} },
+			{ "abaa", {} },
+			{ "c", {} },
+			{ "abcabcef", {} },
+			{ "", {} },
+			{ "abc", { 50, 60, 70 } },
+			{ "ef", { 17 } },
+			{ "abcabc", { 100, 110, 120, 130, 140 } },
+			{ "abcabcabc", { 150, 160, 170, 180, 190, 200, 210 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":100 axs:5 .",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "axss", {} },
+			{ "aaxsa", {} },
+			{ "aaxs", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "x", {} },
+			{ "s",{} },
+			{ "a",{} },
+			{ "axs", { 105 } },
+		}
+	});
+	FSTTestcases.push_back({
+		"axs:5 :100  .",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "axss", {} },
+			{ "aaxsa", {} },
+			{ "aaxs", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "x", {} },
+			{ "s", {} },
+			{ "a", {} },
+			{ "axs", { 105 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":100 :200 axs:5 | |",
+		false,
+		false,
+		{
+			{ "", { 100, 200, 0 } },
+			{ "axss", {} },
+			{ "aaxsa", {} },
+			{ "aaxs", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "x", {} },
+			{ "s", {} },
+			{ "a", {} },
+			{ "axs", { 5 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":100 :200 axs:5 | | :300 :400 | |",
+		false,
+		false,
+		{
+			{ "", { 100, 200, 300, 400, 0 } },
+			{ "axss", {} },
+			{ "aaxsa", {} },
+			{ "aaxs", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "x", {} },
+			{ "s", {} },
+			{ "a", {} },
+			{ "axs", { 5 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":100 :200 axs:5 . . :300 :400 | |",
+		false,
+		false,
+		{
+			{ "", { 0, 300, 400 } },
+			{ "axss", {} },
+			{ "aaxsa", {} },
+			{ "aaxs", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "x", {} },
+			{ "s", {} },
+			{ "a", {} },
+			{ "axs", { 305 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":100 :200 axs:5 . . :300 :400 . .",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "axss", {} },
+			{ "aaxsa", {} },
+			{ "aaxs", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "x", {} },
+			{ "s", {} },
+			{ "a", {} },
+			{ "axs", { 1005 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":100 :200 axs:5 . . :300 :400 . . axs:666 |",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "axss", {} },
+			{ "aaxsa", {} },
+			{ "aaxs", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "x", {} },
+			{ "s", {} },
+			{ "a", {} },
+			{ "axs", { 1005, 666 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":100 :200 axs:5 . . :300 :400 . . axs:666 | :4 .",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "axss", {} },
+			{ "aaxsa", {} },
+			{ "aaxs", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "x", {} },
+			{ "s", {} },
+			{ "a", {} },
+			{ "axs", { 1009, 670 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":100 :200 axs:5 . . :300 :400 . . axs:666 | :4 . :0 .",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "axss", {} },
+			{ "aaxsa", {} },
+			{ "aaxs", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+			{ "x", {} },
+			{ "s", {} },
+			{ "a", {} },
+			{ "axs", { 1009, 670 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":0",
+		false,
+		false,
+		{
+			{ "", { 0 } },
+			{ "a", {} },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+		}
+	});
+	FSTTestcases.push_back({
+		":10",
+		false,
+		false,
+		{
+			{ "", { 0, 10 } },
+			{ "a", {} },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+		}
+	});
+	FSTTestcases.push_back({
+		":10 :30 :50 . .",
+		false,
+		false,
+		{
+			{ "", { 0, 90 } },
+			{ "a", {} },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+		}
+	});
+	FSTTestcases.push_back({
+		":10 :30 :50 | |",
+		false,
+		false,
+		{
+			{ "", { 0, 10, 30, 50 } },
+			{ "a", {} },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+		}
+	});
 }
 
 
@@ -384,6 +726,7 @@ void RunFinalStateTransducerTests()
 		
 		bool infinite;
 		transducer->MakeRealTime(infinite);
+		transducer->UpdateRecognizingEmptyWord();
 
 		if (infinite != testCase.infinite)
 		{
