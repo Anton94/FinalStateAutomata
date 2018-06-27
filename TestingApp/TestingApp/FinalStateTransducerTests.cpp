@@ -48,7 +48,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		"a:5 a:100 | *",
 		false,
-		true,
+		false,
 		{
 			{ "", { 0 } },
 			{ "b", {} },
@@ -62,7 +62,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		"a:5 a:100 | * c:40 * .",
 		false,
-		true,
+		false,
 		{
 			{ "", { 0 } },
 			{ "b", {} },
@@ -366,7 +366,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		"a:5 :3 .",
 		false,
-		false,
+		true,
 		{
 			{ "", {} },
 			{ "a", { 8 } },
@@ -380,7 +380,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		"a:5 :3 . *",
 		false,
-		false,
+		true,
 		{
 			{ "ab", {} },
 			{ "b", {} },
@@ -396,7 +396,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		"tony:5 :3 . *",
 		false,
-		false,
+		true,
 		{
 			{ "tonyb", {} },
 			{ "b", {} },
@@ -412,7 +412,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		"a:5 :3 |",
 		false,
-		false,
+		true,
 		{
 			{ "ab", {} },
 			{ "aa", {} },
@@ -427,7 +427,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		":3 a:5 |",
 		false,
-		false,
+		true,
 		{
 			{ "ab", {} },
 			{ "aa", {} },
@@ -449,7 +449,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		":35 abc:15 . * ef:17 |",
 		false,
-		false,
+		true,
 		{
 			{ "abcef", {} },
 			{ "e", {} },
@@ -467,7 +467,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		":35 abc:15 . + ef:17 |",
 		false,
-		false,
+		true,
 		{
 			{ "abcef", {} },
 			{ "e", {} },
@@ -503,7 +503,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		":100 axs:5 .",
 		false,
-		false,
+		true,
 		{
 			{ "", {} },
 			{ "axss", {} },
@@ -520,7 +520,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		"axs:5 :100  .",
 		false,
-		false,
+		true,
 		{
 			{ "", {} },
 			{ "axss", {} },
@@ -588,7 +588,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		":100 :200 axs:5 . . :300 :400 . .",
 		false,
-		false,
+		true,
 		{
 			{ "", {} },
 			{ "axss", {} },
@@ -656,7 +656,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		":0",
 		false,
-		false,
+		true,
 		{
 			{ "", { 0 } },
 			{ "a", {} },
@@ -708,7 +708,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		":10 :20 . a:6 .",
 		false,
-		false,
+		true,
 		{
 			{ "", {} },
 			{ "aa", {} },
@@ -721,7 +721,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		":10 :20 . words:6 .",
 		false,
-		false,
+		true,
 		{
 			{ "", {} },
 			{ "wordswords", {} },
@@ -734,7 +734,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		":10 :20 words:6 . .",
 		false,
-		false,
+		true,
 		{
 			{ "", {} },
 			{ "wordswords", {} },
@@ -747,7 +747,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		"words:6 :10 . :20 .",
 		false,
-		false,
+		true,
 		{
 			{ "", {} },
 			{ "wordswords", {} },
@@ -760,7 +760,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		"words:6 :10 :20 . .",
 		false,
-		false,
+		true,
 		{
 			{ "", {} },
 			{ "wordswords", {} },
@@ -773,7 +773,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		":10 :30 :50 . .",
 		false,
-		false,
+		true,
 		{
 			{ "", { 0, 90 } },
 			{ "a", {} },
@@ -799,7 +799,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		"a:5 :0 | *",
 		false,
-		false,
+		true,
 		{
 			{ "", { 0 } },
 			{ "xx", {} },
@@ -829,7 +829,7 @@ static void PopulateWithTestCases()
 	FSTTestcases.push_back({
 		":10 a:5 . *",
 		false,
-		false,
+		true,
 		{
 			{ "", { 0 } },
 			{ "xx", {} },
@@ -990,14 +990,25 @@ void RunFinalStateTransducerTests()
 		auto transducer = ts.GetBuildedTransducer();
 		// If some test fails try to skip Real-time conversion.
 		
-		bool infinite;
-		transducer->MakeRealTime(infinite);
+		bool infinite =	transducer->MakeRealTime();
 		transducer->UpdateRecognizingEmptyWord();
+		bool functional = transducer->TestForFunctionality();
+
+		std::cout << "\tFST is " << (functional ? "functional" : "non-functional") << " and "
+			<< (infinite ? "infinite" : "non-infinite") << ".\n";
 
 		if (infinite != testCase.infinite)
 		{
 			std::cout << "FAILED: Expected the transducer to be "
 				<< (testCase.infinite ? "infinite" : "non-infinite")
+				<< " but it was not.\n";
+			++failedTests;
+		}
+
+		if (functional != testCase.functional)
+		{
+			std::cout << "FAILED: Expected the transducer to be "
+				<< (testCase.functional ? "functional" : "non-functional")
 				<< " but it was not.\n";
 			++failedTests;
 		}

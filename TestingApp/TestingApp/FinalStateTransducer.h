@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <boost/functional/hash.hpp>
 #include "SetOperations.h"
 
 
@@ -16,6 +17,12 @@
 	I will denote the transitions between states like that:
 	q0 --word:number--> q1 ('e' will be epsilon, i.e. the empty word)
 */
+
+typedef std::pair<unsigned, unsigned> Outputs;
+typedef std::pair<unsigned, Outputs> StateAndOutputs;
+typedef std::unordered_map<unsigned, std::unordered_set<StateAndOutputs,
+	boost::hash<StateAndOutputs>>> SetOfTransitionsWithPairedOutputs;
+
 class FinalStateTransducer
 {
 public:
@@ -43,8 +50,11 @@ public:
 
 	bool IsInfinite() const;
 	bool IsRealTime() const;
+	bool IsFunctional() const;
 
-	void MakeRealTime(bool& infinite);
+	bool MakeRealTime();
+
+	bool TestForFunctionality();
 
 	void UpdateRecognizingEmptyWord();
 private:
@@ -71,6 +81,7 @@ private: // TODO: the key has to be something else, not a whole string!
 	typedef std::unordered_map<std::string, std::unordered_set<Transition>>
 		StateTransitions;
 	typedef std::vector<StateTransitions> DeltaType;
+
 	DeltaType Delta; // State at position 'i' with word 'w' will lead to state(s) ('state') (which are indexes in the Delta vector) with output ('output') some number.
 	std::unordered_set<unsigned> FinalStates;
 	std::unordered_set<unsigned> InitialStates;
@@ -81,11 +92,12 @@ private: // TODO: the key has to be something else, not a whole string!
 			SOTStateTransitions;
 		typedef std::vector<SOTStateTransitions> SOTDeltaType;
 		SOTDeltaType Delta;
+		unsigned StatesCount;
 		std::unordered_set<unsigned> FinalStates;
 		std::unordered_set<unsigned> InitialStates;
 
 		void Proj1_2(SetOfTransitions& r) const;
-		void Proj1_23(SetOfTransitionsWithOutputs& r) const;
+		void Proj1_23(SetOfTransitionsWithPairedOutputs& r) const;
 
 		// Removes the states which are not connected to the a initial state or a final state.
 		void Trim();
@@ -94,6 +106,7 @@ private: // TODO: the key has to be something else, not a whole string!
 	bool RecognizingEmptyWord;
 	bool Infinite;
 	bool RealTime;
+	bool Functional;
 
 	SetOfTransitionsWithOutputs CloseEpsilonOnStates;
 	std::unordered_set<unsigned> StatesWithEpsilonCycleWithPositiveOutput;

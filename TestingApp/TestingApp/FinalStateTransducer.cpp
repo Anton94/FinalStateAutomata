@@ -10,6 +10,7 @@ FinalStateTransducer::FinalStateTransducer(char* regExpr, int separator, int len
 	: RecognizingEmptyWord(false)
 	, Infinite(false)
 	, RealTime(false)
+	, Functional(false)
 {
 	char* word = regExpr;
 	*(regExpr + separator) = '\0';
@@ -380,13 +381,123 @@ void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 	Delta = std::move(newDelta);
 }
 
-void FinalStateTransducer::MakeRealTime(bool& infinite)
+bool FinalStateTransducer::MakeRealTime()
 {
 	RemoveEpsilon();
 	Expand();
-	RemoveUpperEpsilon(infinite);
-	Infinite = infinite;
-	RealTime = !infinite; // If it is not an infinite then the conversion to real-time transducer was successful
+	RemoveUpperEpsilon(Infinite);
+	RealTime = !Infinite; // If it is not an infinite then the conversion to real-time transducer was successful
+	return Infinite;
+}
+
+void distance(const Outputs& l, const Outputs& r, Outputs& res)
+{
+	res.first = l.first + r.first;
+	res.second = l.second + r.second;
+
+	auto common = 0u;
+	if (res.first > res.second)
+	{
+		common = res.second;
+	}
+	else
+	{
+		common = res.first;
+	}
+
+	res.first -= common;
+	res.second -= common;
+}
+
+bool balancable(const Outputs& o)
+{
+	return o.first == 0 || o.second == 0;
+}
+
+bool zero(const Outputs& o)
+{
+	return o.first == 0 && o.second == 0;
+}
+
+bool FinalStateTransducer::TestForFunctionality()
+{
+	Functional = false;
+	if (IsInfinite() || !IsRealTime() || InitialEpsilonOutputs.size() > 1)
+	{
+		return false;
+	}
+
+	MakeSquaredOutputTransducer();
+	SOT.Trim();
+
+	SetOfTransitionsWithPairedOutputs SOTDeltaO;
+	SOT.Proj1_23(SOTDeltaO);
+
+	std::unordered_map<unsigned, Outputs> AdmForLookups(SOT.InitialStates.size()); // For a state it gives the holden outpus
+	std::vector<unsigned> AdmStatesForIteration; // For a state it gives the holden outpus
+	AdmStatesForIteration.reserve(SOT.InitialStates.size());
+
+	// Insert: I x {0, 0}
+	for (const auto& initialStateIndex : SOT.InitialStates)
+	{
+		AdmForLookups[initialStateIndex] = { 0, 0 };
+		AdmStatesForIteration.push_back(initialStateIndex);
+	}
+
+	for (size_t i = 0; i < AdmStatesForIteration.size(); ++i)
+	{
+		auto curr = AdmForLookups.find(AdmStatesForIteration[i]);
+		assert(curr != AdmForLookups.end());
+
+		const auto& q = curr->first; // state
+		const auto& h = curr->second; // (o1, o2) holden output
+
+		std::vector<StateAndOutputs> Dq;
+
+		auto it = SOTDeltaO.find(q);
+		if (it != SOTDeltaO.end())
+		{
+			for (const auto& transition : it->second)
+			{
+				// transition.first is state.
+				// transition.second is a pair of holded outputs.
+				Outputs newHoldenOutput;
+				distance(h, transition.second, newHoldenOutput);
+				StateAndOutputs newStateAndHoldenOutputs { transition.first, std::move(newHoldenOutput) };
+				if (newStateAndHoldenOutputs.first != q || newStateAndHoldenOutputs.second != h)
+				{
+					Dq.push_back(std::move(newStateAndHoldenOutputs));
+				}
+			}
+		}
+
+		if (Dq.size() > 0)
+		{
+			for (const auto& qAndH : Dq)
+			{
+				const auto& qPrim = qAndH.first;
+				const auto& hPrim = qAndH.second;
+				if (!balancable(hPrim) ||
+					(SOT.FinalStates.find(qPrim) != SOT.FinalStates.end() && !zero(hPrim)))
+				{
+					return false;
+				}
+
+				auto it = AdmForLookups.find(qPrim);
+				if (it != AdmForLookups.end() && hPrim != it->second)
+				{
+					return false;
+				}
+				if (it == AdmForLookups.end())
+				{
+					AdmForLookups[qPrim] = std::move(hPrim);
+					AdmStatesForIteration.push_back(qPrim);
+				}
+			}
+		}
+	}
+
+	return Functional = true;
 }
 
 // Removes the states which are not connected to the a initial state or a final state.
@@ -442,41 +553,52 @@ void FinalStateTransducer::SquaredOutputTransducer::Trim()
 		}
 	}
 
+	const unsigned REMOVED_STATE = unsigned(-1);
+	std::unordered_map<unsigned, unsigned> remapingOfStateIndexes;
 	// Remove the non reachable or co-reachabe state transitions.
 	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
 		if (reachableStates.find(i) == reachableStates.end() || coReachableStates.find(i) == coReachableStates.end())
 		{
-			Delta[i].clear();
+			remapingOfStateIndexes[i] = REMOVED_STATE;
 		}
 	}
 
 	// Update the Initial and Final states.
-	for (const auto& initialStateIndex : InitialStates)
+	for (auto it = InitialStates.begin(); it != InitialStates.end(); )
 	{
-		if (coReachableStates.find(initialStateIndex) == coReachableStates.end())
+		if (coReachableStates.find(*it) == coReachableStates.end())
 		{
-			InitialStates.erase(initialStateIndex);
+			remapingOfStateIndexes[*it] = REMOVED_STATE;
+			it = InitialStates.erase(it);
+		}
+		else
+		{
+			++it;
 		}
 	}
-	for (const auto& finalStateIndex : FinalStates)
+	for (auto it = FinalStates.begin(); it != FinalStates.end(); )
 	{
-		if (reachableStates.find(finalStateIndex) == reachableStates.end())
+		if (reachableStates.find(*it) == reachableStates.end())
 		{
-			FinalStates.erase(finalStateIndex);
+			remapingOfStateIndexes[*it] = REMOVED_STATE;
+			it = FinalStates.erase(it);
+		}
+		else
+		{
+			++it;
 		}
 	}
 
-	// Remove the deleted states from the vector and remap the transitions
-	const unsigned REMOVED_STATE = unsigned(-1);
-
-	std::unordered_map<unsigned, unsigned> remapingOfStateIndexes;
+	// Remove the deleted states from the vector
 	unsigned newStateIndex = 0;
 	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
-		if (Delta[i].empty())
+		auto it = remapingOfStateIndexes.find(i);
+		if (it != remapingOfStateIndexes.end())
 		{
-			remapingOfStateIndexes[i] = REMOVED_STATE;
+			assert(it->second == REMOVED_STATE);
+			Delta[i].clear();
 		}
 		else
 		{
@@ -485,9 +607,43 @@ void FinalStateTransducer::SquaredOutputTransducer::Trim()
 		}
 	}
 
+	// The final states might not have transitions from them, but they can be reachable.
+	for (const auto& finalStateIndex : FinalStates)
+	{
+		if (remapingOfStateIndexes.find(finalStateIndex) == remapingOfStateIndexes.end())
+		{
+			remapingOfStateIndexes[finalStateIndex] = finalStateIndex;
+		}
+	}
+	// Remap the initial and final states
+	std::unordered_set<unsigned> remapedInitialStates;
+	for (const auto& initialStateIndex : InitialStates)
+	{
+		assert(remapingOfStateIndexes.find(initialStateIndex) != remapingOfStateIndexes.end());
+		const auto mapedInitialStateIndex = remapingOfStateIndexes[initialStateIndex];
+		if (mapedInitialStateIndex != REMOVED_STATE)
+		{
+			remapedInitialStates.insert(mapedInitialStateIndex);
+		}
+	}
+	InitialStates = std::move(remapedInitialStates);
+
+	std::unordered_set<unsigned> remapedFinalStates;
+	for (const auto& finalStateIndex : FinalStates)
+	{
+		assert(remapingOfStateIndexes.find(finalStateIndex) != remapingOfStateIndexes.end());
+		const auto mapedFinalStateIndex = remapingOfStateIndexes[finalStateIndex];
+		if (mapedFinalStateIndex != REMOVED_STATE)
+		{
+			remapedFinalStates.insert(mapedFinalStateIndex);
+		}
+	}
+	FinalStates = std::move(remapedFinalStates);
+
 	// "Squash" the elements in the vector.
 	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
+		assert(remapingOfStateIndexes.find(i) != remapingOfStateIndexes.end());
 		const auto& newStateIndex = remapingOfStateIndexes[i];
 		if (newStateIndex != REMOVED_STATE)
 		{
@@ -507,10 +663,14 @@ void FinalStateTransducer::SquaredOutputTransducer::Trim()
 			updatedTransitions.clear();
 			for (const auto& transition : transitionsWithWord.second)
 			{
-				const auto& newDestinationStateIndex = remapingOfStateIndexes[transition.state];
-				if (newDestinationStateIndex != REMOVED_STATE)
+				auto it = remapingOfStateIndexes.find(transition.state);
+				if (it != remapingOfStateIndexes.end())
 				{
-					updatedTransitions.insert(Transition{ newDestinationStateIndex, transition.output });
+					const auto& newDestinationStateIndex = it->second;
+					if (newDestinationStateIndex != REMOVED_STATE)
+					{
+						updatedTransitions.insert(Transition{ newDestinationStateIndex, transition.output });
+					}
 				}
 			}
 			transitionsWithWord.second = std::move(updatedTransitions);
@@ -526,14 +686,13 @@ void FinalStateTransducer::SquaredOutputTransducer::Proj1_2(SetOfTransitions& r)
 		{
 			for (const auto& transition : transitions.second)
 			{
-
 				r[i].insert(transition.state);
 			}
 		}
 	}
 }
 
-void FinalStateTransducer::SquaredOutputTransducer::Proj1_23(SetOfTransitionsWithOutputs& r) const
+void FinalStateTransducer::SquaredOutputTransducer::Proj1_23(SetOfTransitionsWithPairedOutputs& r) const
 {
 	for (unsigned i = 0, bound = (unsigned)Delta.size(); i < bound; ++i)
 	{
@@ -541,8 +700,7 @@ void FinalStateTransducer::SquaredOutputTransducer::Proj1_23(SetOfTransitionsWit
 		{
 			for (const auto& transition : transitions.second)
 			{
-
-				r[i].insert(Transition{ transition.state, transition.output });
+				r[i].insert(StateAndOutputs{ transition.state, Outputs { transitions.first, transition.output} });
 			}
 		}
 	}
@@ -556,7 +714,6 @@ void FinalStateTransducer::Proj1_2(SetOfTransitions& r) const
 		{
 			for (const auto& transition : transitions.second)
 			{
-
 				r[i].insert(transition.state);
 			}
 		}
@@ -571,7 +728,6 @@ void FinalStateTransducer::Proj1_23(SetOfTransitionsWithOutputs& r) const
 		{
 			for (const auto& transition : transitions.second)
 			{
-
 				r[i].insert(Transition{ transition.state, transition.output });
 			}
 		}
@@ -583,15 +739,11 @@ void FinalStateTransducer::MakeSquaredOutputTransducer()
 	assert(IsRealTime());
 	assert(!IsInfinite());
 
-	SetOfTransitionsWithOutputs DeltaO;
-	Proj1_23(DeltaO);
-
 	typedef std::pair<unsigned, unsigned> P; // <p1, p2>
 
-	SOT.Delta.clear();
-
 	size_t initialIxIElementsCount = InitialStates.size() * InitialStates.size();
-	std::vector<P> pForIteration(initialIxIElementsCount);
+	std::vector<P> pForIteration;
+	pForIteration.reserve(initialIxIElementsCount);
 	std::unordered_map<P, unsigned,	boost::hash<P>> // <p1, p2>, id (it's place in the iteration vector)
 		pForLookups(initialIxIElementsCount);
 
@@ -609,24 +761,32 @@ void FinalStateTransducer::MakeSquaredOutputTransducer()
 	typedef std::pair<std::pair<unsigned, unsigned>, std::pair<unsigned, unsigned>>	// < <o1, o2>, <q1, q2>>
 		PairOutputsAndStates;
 
-	Delta.clear();
-	Delta.reserve(initialIxIElementsCount); // Tiny posible optimization.
+	SOT.Delta.clear();
+	SOT.Delta.reserve(initialIxIElementsCount); // Tiny posible optimization.
 	for (unsigned i = 0; i < pForIteration.size(); ++i)
 	{
 		const auto& p = pForIteration[i]; // a pair <p1, p2>
-		auto it1 = DeltaO.find(p.first);
-		auto it2 = DeltaO.find(p.second); // TODO: Move in 'if' for skipping the second search sometimes...
-		if (it1 != DeltaO.end() && it2 != DeltaO.end())
+		if (p.first < Delta.size() && p.second < Delta.size())
 		{
-			const auto& D1 = it1->second;
-			const auto& D2 = it2->second;
+			const auto& D1Map = Delta[p.first];
+			const auto& D2Map = Delta[p.second];
 
 			std::unordered_set<PairOutputsAndStates, boost::hash<PairOutputsAndStates>> N;
-			for (const auto& tr1 : D1)
+			for (const auto& wordAndTransitions : D1Map)
 			{
-				for (const auto& tr2 : D2)
+				// Only couple them by same transition word.
+				const auto& D1 = wordAndTransitions.second;
+				auto it = D2Map.find(wordAndTransitions.first);
+				if (it != D2Map.end())
 				{
-					N.insert(PairOutputsAndStates { {tr1.output, tr2.output }, {tr1.state, tr2.state} }); // Inserting  < <o1, o2>, <q1, q2>>
+					const auto& D2 = it->second;
+					for (const auto& tr1 : D1)
+					{
+						for (const auto& tr2 : D2)
+						{
+							N.insert(PairOutputsAndStates{ { tr1.output, tr2.output },{ tr1.state, tr2.state } }); // Inserting  < <o1, o2>, <q1, q2>>
+						}
+					}
 				}
 			}
 
@@ -637,8 +797,8 @@ void FinalStateTransducer::MakeSquaredOutputTransducer()
 				const auto it = pForLookups.find(p);
 				if (it == pForLookups.end())
 				{
+					pForLookups[p] = (unsigned)pForIteration.size(); // The number of 'p' in the vector
 					pForIteration.push_back(p);
-					pForLookups[p] = (unsigned) pForIteration.size(); // The number of 'p' in the vector
 				}
 			}
 
@@ -648,7 +808,7 @@ void FinalStateTransducer::MakeSquaredOutputTransducer()
 			{
 				const auto& o = pairOutputsAndStates.first;
 				const auto& p = pairOutputsAndStates.second;
-				const auto it = pForLookups.find(pairOutputsAndStates.second);
+				const auto it = pForLookups.find(p);
 				assert(it != pForLookups.end());
 
 				// add transition <k, o1, #p, o2> ; it->second is the #p and k is the new state.
@@ -956,6 +1116,11 @@ bool FinalStateTransducer::IsInfinite() const
 bool FinalStateTransducer::IsRealTime() const
 {
 	return RealTime;
+}
+
+bool FinalStateTransducer::IsFunctional() const
+{
+	return Functional;
 }
 
 bool FinalStateTransducer::RealTimeIsRecognizingEmptyWord() const
