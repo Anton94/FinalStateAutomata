@@ -3,6 +3,7 @@
 #include "RegularFinalStateTransducerBuilder.h"
 #include "InputValidator.h"
 #include "Tests.h"
+#include "TestCaseGenerator.h"
 
 //const char * regExpr = "a:5 * a:100 * | *"; // inf loop, inf outputs..
 const char * regExpr = "a:5 b:100 | c:1 |";
@@ -33,6 +34,8 @@ void ProcessCommandLineArguments(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
+	GenerateCustomWordConcatenationsAndIncreasingOutputs(std::string{ "word" }, 10000);
+
 	ProcessCommandLineArguments(argc, argv);
 	//RunInputValidationTests();
 
