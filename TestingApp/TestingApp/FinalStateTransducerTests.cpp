@@ -672,11 +672,102 @@ static void PopulateWithTestCases()
 		false,
 		{
 			{ "", { 0, 10 } },
+			{ "a",{} },
+			{ "xx",{} },
+			{ "aw",{} },
+			{ "ax",{} },
+			{ "xs",{} },
+		}
+	});
+	FSTTestcases.push_back({
+		":10 :20 |",
+		false,
+		false,
+		{
+			{ "", { 0, 10, 20 } },
 			{ "a", {} },
 			{ "xx", {} },
 			{ "aw", {} },
 			{ "ax", {} },
 			{ "xs", {} },
+		}
+	});
+	FSTTestcases.push_back({
+		":10 :20 .",
+		false,
+		false,
+		{
+			{ "", { 0, 30 } },
+			{ "a", {} },
+			{ "xx", {} },
+			{ "aw", {} },
+			{ "ax", {} },
+			{ "xs", {} },
+		}
+	});
+	FSTTestcases.push_back({
+		":10 :20 . a:6 .",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "aa", {} },
+			{ "aba", {} },
+			{ "ax", {} },
+			{ "xa", {} },
+			{ "a", { 36 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":10 :20 . words:6 .",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "wordswords", {} },
+			{ "word", {} },
+			{ "ords", {} },
+			{ "ord", {} },
+			{ "words", { 36 } },
+		}
+	});
+	FSTTestcases.push_back({
+		":10 :20 words:6 . .",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "wordswords", {} },
+			{ "word", {} },
+			{ "ords", {} },
+			{ "ord", {} },
+			{ "words", { 36 } },
+		}
+	});
+	FSTTestcases.push_back({
+		"words:6 :10 . :20 .",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "wordswords", {} },
+			{ "word", {} },
+			{ "ords", {} },
+			{ "ord", {} },
+			{ "words", { 36 } },
+		}
+	});
+	FSTTestcases.push_back({
+		"words:6 :10 :20 . .",
+		false,
+		false,
+		{
+			{ "", {} },
+			{ "wordswords", {} },
+			{ "word", {} },
+			{ "ords", {} },
+			{ "ord", {} },
+			{ "words", { 36 } },
 		}
 	});
 	FSTTestcases.push_back({
@@ -779,7 +870,7 @@ static void PopulateWithTestCases()
 			{ "xs", {} },
 			{ "a", {} },
 			{ "aa", {} },
-			{ "ab",{} },
+			{ "ab", {} },
 			{ "aaa", {} },
 			{ "bb", {} },
 			{ "b", {} },
@@ -797,9 +888,8 @@ static void PopulateWithTestCases()
 			{ "xs", {} },
 			{ "a", {} },
 			{ "aa", {} },
-			{ "ab",{} },
+			{ "ab", {} },
 			{ "aaa", {} },
-			{ "bb", {} },
 			{ "abb", {} },
 			{ "abba", {} },
 			{ "bba", {} },
@@ -820,7 +910,7 @@ static void PopulateWithTestCases()
 			{ "xs", {} },
 			{ "a", {} },
 			{ "aa", {} },
-			{ "aabcd",{} },
+			{ "aabcd", {} },
 			{ "aaa", {} },
 			{ "abcdabcd", {} },
 			{ "aabcdabcd", {} },
@@ -843,7 +933,7 @@ static void PopulateWithTestCases()
 			{ "xs", {} },
 			{ "a", {} },
 			{ "aa", {} },
-			{ "abcdd",{} },
+			{ "abcdd", {} },
 			{ "aaa", {} },
 			{ "abcdabcd", {} },
 			{ "aabcdabcd", {} },
@@ -870,7 +960,7 @@ static void PopulateWithTestCases()
 			{ "bba", {} },
 			{ "atony", {} },
 			{ "aatony", {} },
-			{ "abcddtony",{} },
+			{ "abcddtony", {} },
 			{ "aaatony", {} },
 			{ "abcdabcdtony", {} },
 			{ "aabcdabcdtony", {} },
