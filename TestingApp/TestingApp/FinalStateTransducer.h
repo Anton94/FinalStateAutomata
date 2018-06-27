@@ -80,7 +80,10 @@ private: // TODO: the key has to be something else, not a whole string!
 
 	struct SquaredOutputTransducer
 	{
-		SetOfTransitionsWithOutputs Delta;
+		typedef std::unordered_map<unsigned, std::unordered_set<Transition>>
+			SOTStateTransitions;
+		typedef std::vector<SOTStateTransitions> SOTDeltaType;
+		SOTDeltaType Delta;
 		std::unordered_set<unsigned> FinalStates;
 		std::unordered_set<unsigned> InitialStates;
 	} SOT;

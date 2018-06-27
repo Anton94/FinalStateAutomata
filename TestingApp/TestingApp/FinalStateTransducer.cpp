@@ -603,30 +603,51 @@ void FinalStateTransducer::MakeSquaredOutputTransducer()
 			// Add the new pair of states.
 			for (const auto& pairOutputsAndStates : N)
 			{
-				const auto it = pForLookups.find(pairOutputsAndStates.first);
+				const auto& p = pairOutputsAndStates.second;
+				const auto it = pForLookups.find(p);
 				if (it == pForLookups.end())
 				{
-					pForIteration.push_back(it->first);
-					pForLookups[it->first] = pForIteration.size();
+					pForIteration.push_back(p);
+					pForLookups[p] = pForIteration.size(); // The number of 'p' in the vector
 				}
 			}
 
-			// Update the FST's delta.
-			Delta.push_back(StateTransitions());
+			// Update the Squared FST's delta by adding a new state and it's transitions.
+			SquaredOutputTransducer::SOTStateTransitions newStateWithTransitions;
 			for (const auto& pairOutputsAndStates : N)
 			{
-				const auto it = pForLookups.find(pairOutputsAndStates.first);
-				if (it == pForLookups.end())
-				{
-					// TODO do it..
-				}
+				const auto& o = pairOutputsAndStates.first;
+				const auto& p = pairOutputsAndStates.second;
+				const auto it = pForLookups.find(pairOutputsAndStates.second);
+				assert(it != pForLookups.end());
+
+				// add transition <k, o1, #p, o2> ; it->second is the #p and k is the new state.
+				newStateWithTransitions[o.first].insert(Transition{ it->second, o.second });
 			}
+			SOT.Delta.push_back(std::move(newStateWithTransitions));
 		}
 	}
 
-	// Update the final states.
+	SOT.FinalStates.clear();
+	SOT.InitialStates.clear();
+	for (unsigned i = 0, bound = (unsigned) pForIteration.size(); i < bound; ++i)
+	{
+		const auto& p = pForIteration[i];
 
-	// Update the initial states.
+		// Update the initial states.
+		if (InitialStates.find(p.first) != InitialStates.end() &&
+			InitialStates.find(p.second) != InitialStates.end())
+		{
+			SOT.InitialStates.insert(i);
+		}
+
+		// Update the final states.
+		if (FinalStates.find(p.first) != FinalStates.end() &&
+			FinalStates.find(p.second) != FinalStates.end())
+		{
+			SOT.FinalStates.insert(i);
+		}
+	}
 }
 
 void FinalStateTransducer::UpdateRecognizingEmptyWord()
