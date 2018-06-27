@@ -1,0 +1,32 @@
+Regex is: "abc:1 abc:2 abc:3 abc:4 abc:5 abc:6 abc:7 abc:8 abc:9 abc:10 abc:11 abc:12 abc:13 abc:14 abc:15 abc:16 abc:17 abc:18 abc:19 abc:20 abc:21 abc:22 abc:23 abc:24 abc:25 abc:26 abc:27 abc:28 abc:29 abc:30 abc:31 abc:32 abc:33 abc:34 abc:35 abc:36 abc:37 abc:38 abc:39 abc:40 abc:41 abc:42 abc:43 abc:44 abc:45 abc:46 abc:47 abc:48 abc:49 abc:50 abc:51 abc:52 abc:53 abc:54 abc:55 abc:56 abc:57 abc:58 abc:59 abc:60 abc:61 abc:62 abc:63 abc:64 abc:65 abc:66 abc:67 abc:68 abc:69 abc:70 abc:71 abc:72 abc:73 abc:74 abc:75 abc:76 abc:77 abc:78 abc:79 abc:80 abc:81 abc:82 abc:83 abc:84 abc:85 abc:86 abc:87 abc:88 abc:89 abc:90 abc:91 abc:92 abc:93 abc:94 abc:95 abc:96 abc:97 abc:98 abc:99 abc:100 abc:101 abc:102 abc:103 abc:104 abc:105 abc:106 abc:107 abc:108 abc:109 abc:110 abc:111 abc:112 abc:113 abc:114 abc:115 abc:116 abc:117 abc:118 abc:119 abc:120 abc:121 abc:122 abc:123 abc:124 abc:125 abc:126 abc:127 abc:128 abc:129 abc:130 abc:131 abc:132 abc:133 abc:134 abc:135 abc:136 abc:137 abc:138 abc:139 abc:140 abc:141 abc:142 abc:143 abc:144 abc:145 abc:146 abc:147 abc:148 abc:149 abc:150 abc:151 abc:152 abc:153 abc:154 abc:155 abc:156 abc:157 abc:158 abc:159 abc:160 abc:161 abc:162 abc:163 abc:164 abc:165 abc:166 abc:167 abc:168 abc:169 abc:170 abc:171 abc:172 abc:173 abc:174 abc:175 abc:176 abc:177 abc:178 abc:179 abc:180 abc:181 abc:182 abc:183 abc:184 abc:185 abc:186 abc:187 abc:188 abc:189 abc:190 abc:191 abc:192 abc:193 abc:194 abc:195 abc:196 abc:197 abc:198 abc:199 abc:200 abc:201 abc:202 abc:203 abc:204 abc:205 abc:206 abc:207 abc:208 abc:209 abc:210 abc:211 abc:212 abc:213 abc:214 abc:215 abc:216 abc:217 abc:218 abc:219 abc:220 abc:221 abc:222 abc:223 abc:224 abc:225 abc:226 abc:227 abc:228 abc:229 abc:230 abc:231 abc:232 abc:233 abc:234 abc:235 abc:236 abc:237 abc:238 abc:239 abc:240 abc:241 abc:242 abc:243 abc:244 abc:245 abc:246 abc:247 abc:248 abc:249 abc:250 | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |"
+Building the transducer...
+		(elapsed time: 0.0224776s)
+Trying to make it a real-time...
+		(elapsed time: 0.0029633s)
+	FST is real-time.
+	FST is not infinite.
+Making a functionality test...
+		(elapsed time: 77.1165s)
+	FST is not functional.
+Traversing the following 10 words:
+	"" : 		(elapsed time: 3.01e-05s)
+
+	"ord" : 		(elapsed time: 4.26e-05s)
+
+	"word" : 		(elapsed time: 1.69e-05s)
+
+	"a" : 		(elapsed time: 4.83e-05s)
+
+	"ab" : 		(elapsed time: 9.3e-05s)
+
+	"bc" : 		(elapsed time: 1.72e-05s)
+
+	"abca" : 		(elapsed time: 8.33e-05s)
+
+	"abc" : 65 1 130 66 2 34 98 102 38 6 70 3 4 69 5 42 106 74 10 7 8 73 9 46 110 78 14 11 12 77 13 50 114 82 18 15 16 81 17 54 118 86 22 19 20 85 21 23 24 89 25 57 62 126 30 94 90 26 122 58 27 28 29 31 32 33 134 35 36 37 138 39 40 41 142 43 44 45 146 47 48 49 150 51 52 53 158 55 56 162 154 59 60 61 159 63 64 166 163 67 68 170 167 71 72 174 171 75 76 178 175 79 80 182 179 83 84 186 183 87 88 190 187 91 92 93 194 95 96 97 198 99 100 101 202 103 104 105 206 107 108 109 210 111 112 113 214 115 116 117 218 119 120 121 222 123 124 125 226 127 128 129 230 131 132 133 234 135 136 137 238 139 140 141 242 143 144 145 246 147 148 149 250 151 184 152 153 155 188 156 157 223 224 160 161 227 228 164 165 231 232 168 169 235 236 172 173 239 240 176 177 243 244 180 181 247 248 185 249 219 220 189 221 191 192 193 225 195 196 197 229 199 200 201 233 203 204 205 237 207 208 209 241 211 212 213 245 215 216 217 		(elapsed time: 8.57e-05s)
+
+	"abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc" : 		(elapsed time: 6.79e-05s)
+
+	"abv" : 		(elapsed time: 4.23e-05s)
+
+Total time taken: 77.1425s.
