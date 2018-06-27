@@ -150,6 +150,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AssertLog.cpp" />
+    <ClCompile Include="CustomTestExecuter.cpp" />
     <ClCompile Include="FinalStateTransducer.cpp" />
     <ClCompile Include="FinalStateTransducerTests.cpp" />
     <ClCompile Include="InputTests.cpp" />
@@ -161,6 +162,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssertLog.h" />
+    <ClInclude Include="CustomTestExecuter.h" />
     <ClInclude Include="FinalStateTransducer.h" />
     <ClInclude Include="InputValidator.h" />
     <ClInclude Include="RegularFinalStateTransducerBuilder.h" />

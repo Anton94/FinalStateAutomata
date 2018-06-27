@@ -4,6 +4,7 @@
 #include "InputValidator.h"
 #include "Tests.h"
 #include "TestCaseGenerator.h"
+#include "CustomTestExecuter.h"
 
 //const char * regExpr = "a:5 * a:100 * | *"; // inf loop, inf outputs..
 const char * regExpr = "a:5 b:100 | c:1 |";
@@ -34,15 +35,16 @@ void ProcessCommandLineArguments(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-	GenerateCustomWordConcatenationsAndIncreasingOutputs(std::string{ "word" }, 10000);
+	//GenerateCustomWordConcatenationsAndIncreasingOutputs(std::string{ "word" }, 10000);
+	ExecuteCustomTestFromFile(std::string{ "test1.txt" });
 
-	ProcessCommandLineArguments(argc, argv);
-	//RunInputValidationTests();
-
-	RunFinalStateTransducerTests();
-	RunTransitiveClosureTests();
-	RunAddIdentityTests();
-	RunCloseEpsilonTests();
+	//ProcessCommandLineArguments(argc, argv);
+	////RunInputValidationTests();
+	//
+	//RunFinalStateTransducerTests();
+	//RunTransitiveClosureTests();
+	//RunAddIdentityTests();
+	//RunCloseEpsilonTests();
 
 	//RegularFinalStateTransducerBuilder builder(regExpr);
 	//FinalStateTransducer* tr = builder.GetBuildedTransducer();
