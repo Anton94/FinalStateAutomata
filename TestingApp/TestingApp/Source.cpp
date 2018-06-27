@@ -26,10 +26,12 @@ void ProcessCommandLineArguments(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 	//GenerateCustomWordConcatenationsAndIncreasingOutputs(std::string{ "word" }, 2000);
+	//GenerateCustomWordUnionsAndIncreasingOutputs(std::string{ "abc" }, 500);
 	//ExecuteCustomTestFromFile(std::string{ "test1.txt" });
 	//ExecuteCustomTestFromFile(std::string{ "test2000ConcatWordsWithIncrOuts.txt" });
+	//ExecuteCustomTestFromFile(std::string{ "test500UnionWordsWithIncrOuts.txt" });
 
-	ProcessCommandLineArguments(argc, argv);
+	//ProcessCommandLineArguments(argc, argv);
 	//RunInputValidationTests();
 
 	RunFinalStateTransducerTests();
