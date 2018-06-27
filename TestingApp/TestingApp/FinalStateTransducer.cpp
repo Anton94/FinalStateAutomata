@@ -390,7 +390,7 @@ void FinalStateTransducer::MakeRealTime(bool& infinite)
 }
 
 // Removes the states which are not connected to the a initial state or a final state.
-void FinalStateTransducer::Trim()
+void FinalStateTransducer::SquaredOutputTransducer::Trim()
 {
 	// TODO: optimizations at few places
 	SetOfTransitions r;
@@ -514,6 +514,36 @@ void FinalStateTransducer::Trim()
 				}
 			}
 			transitionsWithWord.second = std::move(updatedTransitions);
+		}
+	}
+}
+
+void FinalStateTransducer::SquaredOutputTransducer::Proj1_2(SetOfTransitions& r) const
+{
+	for (unsigned i = 0, bound = (unsigned)Delta.size(); i < bound; ++i)
+	{
+		for (const auto& transitions : Delta[i])
+		{
+			for (const auto& transition : transitions.second)
+			{
+
+				r[i].insert(transition.state);
+			}
+		}
+	}
+}
+
+void FinalStateTransducer::SquaredOutputTransducer::Proj1_23(SetOfTransitionsWithOutputs& r) const
+{
+	for (unsigned i = 0, bound = (unsigned)Delta.size(); i < bound; ++i)
+	{
+		for (const auto& transitions : Delta[i])
+		{
+			for (const auto& transition : transitions.second)
+			{
+
+				r[i].insert(Transition{ transition.state, transition.output });
+			}
 		}
 	}
 }

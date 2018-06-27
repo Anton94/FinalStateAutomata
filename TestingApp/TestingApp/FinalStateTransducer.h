@@ -51,9 +51,6 @@ private:
 	// Each transition to be with only single symbol(or epsilon)
 	void Expand();
 
-	// Removes the states which are not connected to the a initial state or a final state.
-	void Trim();
-
 	void Proj1_2(SetOfTransitions& r) const;
 	void Proj1_23(SetOfTransitionsWithOutputs& r) const;
 
@@ -86,6 +83,12 @@ private: // TODO: the key has to be something else, not a whole string!
 		SOTDeltaType Delta;
 		std::unordered_set<unsigned> FinalStates;
 		std::unordered_set<unsigned> InitialStates;
+
+		void Proj1_2(SetOfTransitions& r) const;
+		void Proj1_23(SetOfTransitionsWithOutputs& r) const;
+
+		// Removes the states which are not connected to the a initial state or a final state.
+		void Trim();
 	} SOT;
 
 	bool RecognizingEmptyWord;
