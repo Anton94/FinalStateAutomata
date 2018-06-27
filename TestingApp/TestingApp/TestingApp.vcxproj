@@ -138,6 +138,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>D:\repos\FinalStateAutomata\boost_1_67_0</AdditionalIncludeDirectories>
+      <AdditionalOptions>/DCOMPLEX_VALIDATION_CHECK /DINFO1 /DGUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -163,6 +165,7 @@
     <ClInclude Include="InputValidator.h" />
     <ClInclude Include="RegularFinalStateTransducerBuilder.h" />
     <ClInclude Include="SetOperations.h" />
+    <ClInclude Include="TestCaseGenerator.h" />
     <ClInclude Include="Tests.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
