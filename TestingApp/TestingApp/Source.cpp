@@ -35,8 +35,9 @@ void ProcessCommandLineArguments(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-	//GenerateCustomWordConcatenationsAndIncreasingOutputs(std::string{ "word" }, 10000);
-	ExecuteCustomTestFromFile(std::string{ "test1.txt" });
+	//GenerateCustomWordConcatenationsAndIncreasingOutputs(std::string{ "word" }, 2000);
+	//ExecuteCustomTestFromFile(std::string{ "test1.txt" });
+	ExecuteCustomTestFromFile(std::string{ "test2000ConcatWordsWithIncrOuts.txt" });
 
 	//ProcessCommandLineArguments(argc, argv);
 	////RunInputValidationTests();
