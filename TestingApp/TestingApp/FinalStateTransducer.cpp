@@ -608,7 +608,7 @@ void FinalStateTransducer::MakeSquaredOutputTransducer()
 				if (it == pForLookups.end())
 				{
 					pForIteration.push_back(p);
-					pForLookups[p] = pForIteration.size(); // The number of 'p' in the vector
+					pForLookups[p] = (unsigned) pForIteration.size(); // The number of 'p' in the vector
 				}
 			}
 
@@ -720,7 +720,6 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 		{
 			currTransition = q.front();
 			q.pop_front();
-#if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
 			if (StatesWithEpsilonCycleWithPositiveOutput.find(currTransition.state) != StatesWithEpsilonCycleWithPositiveOutput.end())
 			{
 #if defined(INFO)
@@ -728,7 +727,6 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 #endif
 				return false;
 			}
-#endif
 
 			// If the state has a transition with the symbol *word, then add it
 			//TODO remove the "hack"
@@ -781,7 +779,6 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 	while (!q.empty())
 	{
 		const auto& currTransition = q.front();
-#if defined (GUARD_FROM_EPSILON_CYCLE_ON_TRAVERSING)
 		if (StatesWithEpsilonCycleWithPositiveOutput.find(currTransition.state) != StatesWithEpsilonCycleWithPositiveOutput.end())
 		{
 #if defined(INFO)
@@ -789,7 +786,6 @@ bool FinalStateTransducer::StandardTrawerseWithWord(const char* word, std::unord
 #endif
 			return false;
 		}
-#endif
 		if (FinalStates.find(currTransition.state) != FinalStates.end())
 		{
 			accumulatedOutputs.insert(currTransition.accumulatedOutput);
