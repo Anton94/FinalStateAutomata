@@ -6,18 +6,7 @@
 #include "TestCaseGenerator.h"
 #include "CustomTestExecuter.h"
 
-//const char * regExpr = "a:5 * a:100 * | *"; // inf loop, inf outputs..
 const char * regExpr = "a:5 b:100 | c:1 |";
-
-const char* wordsForTraversion[] = {
-	"b",
-	"a",
-	"aa",
-	"aaa",
-	"aaaa",
-	"ababa",
-	"abbacd",
-};
 
 void ProcessCommandLineArguments(int argc, char *argv[])
 {
@@ -25,10 +14,11 @@ void ProcessCommandLineArguments(int argc, char *argv[])
 	{
 		if (std::strcmp(argv[i], "-validateInput") == 0)
 		{
-			std::cout << "---Validating the input string \"" << regExpr << "\"...\n";
-			auto isValid = checkInputCorrectness(regExpr);
-			std::cout << (isValid ? "---[valid]" : "***[NOT valid]")
-				<< ".\n\n";
+			// TODO: take care for the validation at some point...
+			//std::cout << "---Validating the input string \"" << regExpr << "\"...\n";
+			//auto isValid = checkInputCorrectness(regExpr);
+			//std::cout << (isValid ? "---[valid]" : "***[NOT valid]")
+			//	<< ".\n\n";
 		}
 	}
 }
@@ -37,15 +27,15 @@ int main(int argc, char *argv[])
 {
 	//GenerateCustomWordConcatenationsAndIncreasingOutputs(std::string{ "word" }, 2000);
 	//ExecuteCustomTestFromFile(std::string{ "test1.txt" });
-	ExecuteCustomTestFromFile(std::string{ "test2000ConcatWordsWithIncrOuts.txt" });
+	//ExecuteCustomTestFromFile(std::string{ "test2000ConcatWordsWithIncrOuts.txt" });
 
-	//ProcessCommandLineArguments(argc, argv);
-	////RunInputValidationTests();
-	//
-	//RunFinalStateTransducerTests();
-	//RunTransitiveClosureTests();
-	//RunAddIdentityTests();
-	//RunCloseEpsilonTests();
+	ProcessCommandLineArguments(argc, argv);
+	//RunInputValidationTests();
+
+	RunFinalStateTransducerTests();
+	RunTransitiveClosureTests();
+	RunAddIdentityTests();
+	RunCloseEpsilonTests();
 
 	//RegularFinalStateTransducerBuilder builder(regExpr);
 	//FinalStateTransducer* tr = builder.GetBuildedTransducer();
