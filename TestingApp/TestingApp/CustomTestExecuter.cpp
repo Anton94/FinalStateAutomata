@@ -50,14 +50,14 @@ void ExecuteCustomTestFromFile(std::string& fileName)
 	transducer->UpdateRecognizingEmptyWord();
 
 	std::cout << "Making a functionality test...\n";
-
+	
 	auto startFunctionalityTest = std::chrono::system_clock::now();
 	bool functional = transducer->TestForFunctionality();
 	auto endFunctionalityTest = std::chrono::system_clock::now();
 	std::chrono::duration<double> functionalityTestTime = endFunctionalityTest - startFunctionalityTest;
 	totalTimeTaken += functionalityTestTime;
 	PrintTime(functionalityTestTime);
-
+	
 	std::cout << "\tFST is " << (functional ? "functional" : "not functional") << ".\n";
 
 	std::string numberOfWordsForTraversingFileLine;

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <deque>
 #include <unordered_set>
+#include <queue>
 #include <boost/functional/hash.hpp>
 #include "FinalStateTransducer.h"
 #include "AssertLog.h"
@@ -248,7 +249,9 @@ void FinalStateTransducer::RemoveEpsilon()
 	}
 
 	TransitiveClosure(Ce);
-//	AddIdentity(Ce); // I do not need it
+	// Add identity
+	//for (unsigned i = 0u; i < Delta.size(); ++i)
+	//	Ce[i].insert(i);
 
 	// New Delta
 	for (auto& state : Delta)
@@ -294,7 +297,6 @@ void FinalStateTransducer::RemoveUpperEpsilon(bool& infinite)
 			Ce[i].insert(it->second.begin(), it->second.end());
 		}
 	}
-
 	ClosureEpsilon(Ce, infinite, StatesWithEpsilonCycleWithPositiveOutput);
 	if (infinite)
 	{
@@ -506,53 +508,119 @@ void FinalStateTransducer::SquaredOutputTransducer::Trim()
 	// TODO: optimizations at few places
 	SetOfTransitions r;
 	Proj1_2(r);
-	TransitiveClosure(r);
+	SetOfTransitions reversedR;
+	for (const auto& trs : r)
+	{
+		const auto& a = trs.first;
+		for (const auto& tr : trs.second)
+		{
+			reversedR[tr].insert(a);
+		}
+	}
 
+	/* Traverse to find the reachable states. */
+
+
+	std::unordered_set<unsigned> visited;
+	std::queue<unsigned> q;
 	std::unordered_set<unsigned> reachableStates;
 	// Add the initial states.
 	for (const auto& initialStateIndex : InitialStates)
 	{
 		reachableStates.insert(initialStateIndex);
+		q.push(initialStateIndex);
+		visited.insert(initialStateIndex);
 	}
-
-	// Remove all states which are not connected to an initial one.
-	for (const auto& initialStateIndex : InitialStates)
+	while (!q.empty())
 	{
-		auto it = r.find(initialStateIndex);
-		if (it != r.end())
+		auto curr = q.front();
+		q.pop();
+
+		for (auto& reachableState : r[curr])
 		{
-			for (const auto& reachableState : it->second)
+			if (visited.find(reachableState) == visited.end())
 			{
 				reachableStates.insert(reachableState);
+				q.push(reachableState);
+				visited.insert(reachableState);
 			}
 		}
 	}
+	
+	q = std::queue<unsigned>(); // not needed
+	visited.clear();
 
 	std::unordered_set<unsigned> coReachableStates;
 	// Add the final states.
 	for (const auto& finalStateIndex : FinalStates)
 	{
 		coReachableStates.insert(finalStateIndex);
+		q.push(finalStateIndex);
+		visited.insert(finalStateIndex);
 	}
-
-	// Remove all states which are not connected to a final one.
-	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
+	while (!q.empty())
 	{
-		auto it = r.find(i);
-		if (it != r.end())
+		auto curr = q.front();
+		q.pop();
+
+		for (auto& coReachableState : reversedR[curr])
 		{
-			for (const auto& finalStateIndex : FinalStates)
+			if (visited.find(coReachableState) == visited.end())
 			{
-				auto ifFinal = it->second.find(finalStateIndex);
-				if (ifFinal != it->second.end())
-				{
-					coReachableStates.insert(i);
-					break;
-				}
+				coReachableStates.insert(coReachableState);
+				q.push(coReachableState);
+				visited.insert(coReachableState);
 			}
 		}
 	}
 
+// END
+	//std::unordered_set<unsigned> reachableStates;
+	//// Add the initial states.
+	//for (const auto& initialStateIndex : InitialStates)
+	//{
+	//	reachableStates.insert(initialStateIndex);
+	//}
+
+	//TransitiveClosure(r);
+	//// Remove all states which are not connected to an initial one.
+	//for (const auto& initialStateIndex : InitialStates)
+	//{
+	//	auto it = r.find(initialStateIndex);
+	//	if (it != r.end())
+	//	{
+	//		for (const auto& reachableState : it->second)
+	//		{
+	//			reachableStates.insert(reachableState);
+	//		}
+	//	}
+	//}
+	//
+	//std::unordered_set<unsigned> coReachableStates;
+	//// Add the final states.
+	//for (const auto& finalStateIndex : FinalStates)
+	//{
+	//	coReachableStates.insert(finalStateIndex);
+	//}
+	
+	//// Remove all states which are not connected to a final one.
+	//for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
+	//{
+	//	auto it = r.find(i);
+	//	if (it != r.end())
+	//	{
+	//		for (const auto& finalStateIndex : FinalStates)
+	//		{
+	//			auto ifFinal = it->second.find(finalStateIndex);
+	//			if (ifFinal != it->second.end())
+	//			{
+	//				coReachableStates.insert(i);
+	//				break;
+	//			}
+	//		}
+	//	}
+	//}
+	//
 	const unsigned REMOVED_STATE = unsigned(-1);
 	std::unordered_map<unsigned, unsigned> remapingOfStateIndexes;
 	// Remove the non reachable or co-reachabe state transitions.
@@ -563,7 +631,7 @@ void FinalStateTransducer::SquaredOutputTransducer::Trim()
 			remapingOfStateIndexes[i] = REMOVED_STATE;
 		}
 	}
-
+	
 	// Update the Initial and Final states.
 	for (auto it = InitialStates.begin(); it != InitialStates.end(); )
 	{
@@ -589,7 +657,7 @@ void FinalStateTransducer::SquaredOutputTransducer::Trim()
 			++it;
 		}
 	}
-
+	
 	// Remove the deleted states from the vector
 	unsigned newStateIndex = 0;
 	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
@@ -606,7 +674,7 @@ void FinalStateTransducer::SquaredOutputTransducer::Trim()
 			++newStateIndex;
 		}
 	}
-
+	
 	// The final states might not have transitions from them, but they can be reachable.
 	for (const auto& finalStateIndex : FinalStates)
 	{
@@ -627,7 +695,7 @@ void FinalStateTransducer::SquaredOutputTransducer::Trim()
 		}
 	}
 	InitialStates = std::move(remapedInitialStates);
-
+	
 	std::unordered_set<unsigned> remapedFinalStates;
 	for (const auto& finalStateIndex : FinalStates)
 	{
@@ -639,7 +707,7 @@ void FinalStateTransducer::SquaredOutputTransducer::Trim()
 		}
 	}
 	FinalStates = std::move(remapedFinalStates);
-
+	
 	// "Squash" the elements in the vector.
 	for (unsigned i = 0, bound = (unsigned) Delta.size(); i < bound; ++i)
 	{
@@ -650,10 +718,10 @@ void FinalStateTransducer::SquaredOutputTransducer::Trim()
 			Delta[newStateIndex] = std::move(Delta[i]);
 		}
 	}
-
+	
 	// Now the @newStateIndex is the new vector size.
 	Delta.resize(newStateIndex);
-
+	
 	std::unordered_set<Transition> updatedTransitions;
 	// Update the transitions.
 	for (auto& state : Delta)

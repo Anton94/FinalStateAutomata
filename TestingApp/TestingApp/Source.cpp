@@ -32,14 +32,18 @@ int main(int argc, char *argv[])
 	//ExecuteCustomTestFromFile(std::string{ "test500UnionWordsWithIncrOuts.txt" });
 	//ExecuteCustomTestFromFile(std::string{ "test100UnionWordsWithIncrOuts.txt" });
 	//ExecuteCustomTestFromFile(std::string{ "test250UnionWordsWithIncrOuts.txt" });
+	//ExecuteCustomTestFromFile(std::string{ "N.txt" });
+	//ExecuteCustomTestFromFile(std::string{ "N1.txt" });
+	ExecuteCustomTestFromFile(std::string{ "N2.txt" });
+	//ExecuteCustomTestFromFile(std::string{ "N3.txt" });
 
 	//ProcessCommandLineArguments(argc, argv);
 	//RunInputValidationTests();
 
-	RunFinalStateTransducerTests();
-	RunTransitiveClosureTests();
-	RunAddIdentityTests();
-	RunCloseEpsilonTests();
+	//RunFinalStateTransducerTests();
+	//RunTransitiveClosureTests();
+	//RunAddIdentityTests();
+	//RunCloseEpsilonTests();
 
 	//RegularFinalStateTransducerBuilder builder(regExpr);
 	//FinalStateTransducer* tr = builder.GetBuildedTransducer();

@@ -4,14 +4,21 @@
 
 void TransitiveClosure(SetOfTransitions& r)
 {
+	//for (auto& state : r)
+	//{
+	//	state.second.erase(state.first);
+	//}
 	/*
 		I will devide them into blocks of processing transitions.
 		First devided by the first transition state('a'); second on the level of "connection" (number of states to go through to get to the 'one')
 	*/
 	auto cR = r; // {<a, [b]>}, a map of states 'a' and their destinations, i.e. a set of b's ([b])
-
+	auto cnt = 0;
 	for (auto& destinations : cR) // @destinations is a pair <a, [b]> for which the array [b] is all 'b', such that (a, b) belongs to 'cR'
 	{
+		++cnt;
+		//if (cnt % 1000 == 0)
+		//	std::cout << cnt;
 		std::unordered_set<unsigned> currentlyProcessingDestinations = destinations.second;
 
 		while (currentlyProcessingDestinations.size() > 0)
@@ -26,6 +33,8 @@ void TransitiveClosure(SetOfTransitions& r)
 					for (const auto& destination : it->second)
 					{
 						if (destinations.second.find(destination) == destinations.second.end())
+							//&& currentlyProcessingDestinations.find(destination) == currentlyProcessingDestinations.end()
+							//&& destination != destinations.first)
 						{
 							newDestinations.insert(destination);
 						}
